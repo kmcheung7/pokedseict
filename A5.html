@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>字符編碼系統 - 資訊處理訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]"></div>
+
+  <script>
+    const quizData = [
+      {
+        id: 1,
+        source: "DSE 2022 1A Q11",
+        question: "字符編碼系統的主要用處是什麼？",
+        options: [
+          { id: 'A', text: "將數據標準化表示" },
+          { id: 'B', text: "提升螢幕亮度" },
+          { id: 'C', text: "壓縮圖片檔案" },
+          { id: 'D', text: "增加電腦記憶體" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 2,
+        source: "概念題",
+        question: "為什麼我們能在螢幕看到文本？",
+        options: [
+          { id: 'A', text: "因為字母會直接變成圖片" },
+          { id: 'B', text: "因為電腦有字符編碼系統，能把字母轉成二進制再顯示" },
+          { id: 'C', text: "因為螢幕自己懂人類語言" },
+          { id: 'D', text: "因為文字只需要一種顏色" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 3,
+        source: "DSE 2020 1A Q6",
+        question: "下列哪一項關於 Unicode 是正確的？",
+        options: [
+          { id: 'A', text: "只支援英文" },
+          { id: 'B', text: "只支援繁體中文" },
+          { id: 'C', text: "支援全球所有語言及特殊符號" },
+          { id: 'D', text: "只用於印表機" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 4,
+        source: "DSE 2024 1A Q5",
+        question: "下列哪一項關於 UTF-8 是正確的？",
+        options: [
+          { id: 'A', text: "UTF-8 為網頁主流，並採用可變長度編碼" },
+          { id: 'B', text: "UTF-8 只可表示英文" },
+          { id: 'C', text: "UTF-8 每個字符都一定是 4 字節" },
+          { id: 'D', text: "UTF-8 只用於離線遊戲" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 5,
+        source: "DSE 2017 DSE ICT 1A Q1",
+        question: "假設採用了 UTF-8，下列哪個關於檔案大小的比較是正確的？\n(1) 2017\n(2) JULY\n(3) 二零一七",
+        options: [
+          { id: 'A', text: "(1) > (3)" },
+          { id: 'B', text: "(2) > (1)" },
+          { id: 'C', text: "(2) > (3)" },
+          { id: 'D', text: "(3) > (2)" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 6,
+        source: "DSE 2023 1A Q13",
+        question: "下列哪一項有關 Unicode 與 Big5 的比較是正確的？",
+        options: [
+          { id: 'A', text: "Big5 支援全球所有語言" },
+          { id: 'B', text: "Unicode 只支援繁體中文" },
+          { id: 'C', text: "Big5 主要支援繁體中文，Unicode 支援更多語言" },
+          { id: 'D', text: "兩者都只支援英文" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 7,
+        source: "ASCII + 十六進制",
+        question: "字母 X、Y、Z 的 ASCII 十六進制分別是什麼？",
+        options: [
+          { id: 'A', text: "X=57, Y=58, Z=59" },
+          { id: 'B', text: "X=58, Y=89, Z=5A" },
+          { id: 'C', text: "X=88, Y=89, Z=90" },
+          { id: 'D', text: "X=41, Y=42, Z=43" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 8,
+        source: "UTF-8 概念",
+        question: "UTF-8 的字節大小規則中，哪一項是正確的？",
+        options: [
+          { id: 'A', text: "1 字節：所有字符都適用" },
+          { id: 'B', text: "2 字節：適用於部分歐洲語言字符" },
+          { id: 'C', text: "3 字節：適用於中日韓字符" },
+          { id: 'D', text: "以上皆是" }
+        ],
+        correct: 'D'
+      }
+    ];
+
+    const app = document.getElementById('app');
+
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+    ];
+
+    let state = {
+      view: 'menu',
+      currentQuestion: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null
+    };
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="MENU">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">字符編碼系統 / Q&amp;A</h2>
+
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始挑戰題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">1. 什麼是字符編碼系統？</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  <ul class="space-y-2">
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>字符編碼系統是一種把文字、數字、符號轉換成電腦可理解的二進制的方法。</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>字符編碼系統通常存在於作業系統、瀏覽器與應用程式中。</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">2. 常見編碼標準</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  <div>各字符集主要表示語言：</div>
+                </div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div><b>ASCII</b>：英文，7 至 8 位元</div>
+                  <div><b>GB 碼</b>：簡體中文，2 字節</div>
+                  <div><b>Big5 碼</b>：繁體中文，2 字節</div>
+                  <div><b>Unicode</b>：全球所有語言，1 至 4 字節</div>
+                  <div><b>UTF-8</b>：Unicode 的一種編碼形式，網頁主流，可變長度編碼</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">3. UTF-8 字節大小規則</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• 1 字節：ASCII 字符</div>
+                  <div>• 2 字節：部分歐洲語言字符</div>
+                  <div>• 3 字節：中日韓字符</div>
+                  <div>• 4 字節：表情符號和稀有字符</div>
+                </div>
+              </div>
+
+
+
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">Wild Question</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[140px] flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `
+              <button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">
+                下一題 →
+              </button>
+            ` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = percentage >= 80 ? "太強了！你係字符編碼高手！"
+              : percentage >= 60 ? "做得好！再接再厲！"
+              : "再接再厲！";
+
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT
+              : percentage >= 60 ? POKEMON_IMAGES.GOOD
+              : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <div class="flex gap-3">
+            <a href="index.html" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+              返回圖鑑
+            </a>
+            <button onclick="startQuiz()" class="px-4 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              再試一次
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeView(view) { state.view = view; render(); }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

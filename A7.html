@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>單元 A 資訊處理 - 檔案類型</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]"></div>
+
+  <script>
+    const conceptQuizData = [
+      {
+        id: 1,
+        source: "文本 - 純文字 vs 格式化文本",
+        question: "下列哪一項屬於純文字檔案的特點？",
+        options: [
+          { id: 'A', text: "可儲存字體、顏色及圖片" },
+          { id: 'B', text: "檔案格式通常為 .txt" },
+          { id: 'C', text: "常用 Microsoft Word 編輯" },
+          { id: 'D', text: "檔案大小通常較大" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 2,
+        source: "文本檔案格式",
+        question: "哪一項是格式化文本檔案格式？",
+        options: [
+          { id: 'A', text: ".txt" },
+          { id: 'B', text: ".bmp" },
+          { id: 'C', text: ".docx" },
+          { id: 'D', text: ".mp3" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 3,
+        source: "PDF vs DOCX",
+        question: "下列哪一項最適合形容 PDF？",
+        options: [
+          { id: 'A', text: "比 DOCX 更容易編輯文本內容" },
+          { id: 'B', text: "適合呈現固定版面內容" },
+          { id: 'C', text: "只可儲存純文字，沒有格式" },
+          { id: 'D', text: "通常用記事本編輯" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 4,
+        source: "PDF vs HTML",
+        question: "HTML 是用來建立什麼？",
+        options: [
+          { id: 'A', text: "音訊檔案" },
+          { id: 'B', text: "網頁結構與內容" },
+          { id: 'C', text: "試算表公式" },
+          { id: 'D', text: "相片壓縮格式" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 5,
+        source: "TXT vs ODT vs PDF",
+        question: "哪一項比較正確？",
+        options: [
+          { id: 'A', text: "ODT 比 PDF 更難編輯" },
+          { id: 'B', text: "PDF 允許文本格式化及插入照片" },
+          { id: 'C', text: "TXT 可儲存字體大小與顏色" },
+          { id: 'D', text: "PDF 一定是無法傳閱的文件" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 6,
+        source: "格式化",
+        question: "自動較正是什麼？",
+        options: [
+          { id: 'A', text: "自動偵測並修正輸入錯誤，如拼字錯誤" },
+          { id: 'B', text: "自動將文件轉成 PDF" },
+          { id: 'C', text: "自動刪除圖片" },
+          { id: 'D', text: "自動生成動畫" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 7,
+        source: "自動化功能",
+        question: "目錄功能的主要用途是什麼？",
+        options: [
+          { id: 'A', text: "自動整理文件內容位置，方便快速跳到章節" },
+          { id: 'B', text: "將文字轉換成圖像" },
+          { id: 'C', text: "壓縮檔案大小" },
+          { id: 'D', text: "將文件變成音訊" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 8,
+        source: "郵件合併",
+        question: "郵件合併的作用是什麼？",
+        options: [
+          { id: 'A', text: "減少重複的人手輸入，提升辦公效率" },
+          { id: 'B', text: "將音樂加入文件" },
+          { id: 'C', text: "將圖像轉成向量圖" },
+          { id: 'D', text: "將文件變成網頁" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 9,
+        source: "圖像",
+        question: "圖像分為哪兩種？",
+        options: [
+          { id: 'A', text: "JPG 圖像和 PNG 圖像" },
+          { id: 'B', text: "點陣圖像和向量圖像" },
+          { id: 'C', text: "黑白圖像和彩色圖像" },
+          { id: 'D', text: "靜態圖像和動態圖像" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 10,
+        source: "圖像檔案格式",
+        question: "哪一項屬於點陣圖格式？",
+        options: [
+          { id: 'A', text: ".svg" },
+          { id: 'B', text: ".ai" },
+          { id: 'C', text: ".png" },
+          { id: 'D', text: ".pdf" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 11,
+        source: "透明背景",
+        question: "哪一項格式支援透明背景？",
+        options: [
+          { id: 'A', text: "JPG" },
+          { id: 'B', text: "PNG" },
+          { id: 'C', text: "WAV" },
+          { id: 'D', text: "TXT" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 12,
+        source: "HTML 相片顯示大小",
+        question: "在 HTML 中，只改變顯示大小而不改變長寬比，下載的是不是同一張照片？",
+        options: [
+          { id: 'A', text: "否，會下載不同照片" },
+          { id: 'B', text: "是，因為只是顯示大小改變" },
+          { id: 'C', text: "否，檔案大小一定變小" },
+          { id: 'D', text: "是，但長寬比一定改變" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 13,
+        source: "音訊檔案格式",
+        question: "哪一項是最常見的音樂格式？",
+        options: [
+          { id: 'A', text: "WAV" },
+          { id: 'B', text: "MP3" },
+          { id: 'C', text: "MIDI" },
+          { id: 'D', text: "AVI" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 14,
+        source: "視像檔案格式",
+        question: "哪一項是常用於串流媒體平台的視像格式？",
+        options: [
+          { id: 'A', text: "AVI" },
+          { id: 'B', text: "MP4" },
+          { id: 'C', text: "BMP" },
+          { id: 'D', text: "ODT" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 15,
+        source: "比較檔案大小",
+        question: "一般而言，以下哪些轉換會明顯減少檔案大小？",
+        options: [
+          { id: 'A', text: "ODT → DOCX" },
+          { id: 'B', text: "WAV → MP3" },
+          { id: 'C', text: "BMP → JPG" },
+          { id: 'D', text: "B 和 C" }
+        ],
+        correct: 'D'
+      }
+    ];
+
+    const dseQuizData = [
+      {
+        id: 1,
+        source: "DSE 2019 1A Q2",
+        question: "PDF 與 DOCX 比較，下列哪一項最正確？",
+        options: [
+          { id: 'A', text: "PDF 比 DOCX 更容易編輯" },
+          { id: 'B', text: "PDF 可以保留文本格式，適合呈現固定的版面內容" },
+          { id: 'C', text: "DOCX 只可儲存純文字" },
+          { id: 'D', text: "PDF 的檔案格式一定是 .txt" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 2,
+        source: "DSE 2023 1A Q10",
+        question: "關於 PDF 的敘述，下列哪一項正確？",
+        options: [
+          { id: 'A', text: "PDF 通常比 DOCX 和 ODT 更容易編輯文本內容" },
+          { id: 'B', text: "PDF 適合正式文件傳閱、合同、電子書、可攜式文件存儲" },
+          { id: 'C', text: "PDF 只用來儲存音訊" },
+          { id: 'D', text: "PDF 不支援格式化文本" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 3,
+        source: "DSE 2020 1A Q8",
+        question: "HTML 是用來建立什麼？",
+        options: [
+          { id: 'A', text: "網頁結構與內容" },
+          { id: 'B', text: "視像檔案" },
+          { id: 'C', text: "純文字檔案" },
+          { id: 'D', text: "音訊檔案" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 4,
+        source: "DSE 2024 1A Q2",
+        question: "以下哪一項最符合 DOCX、ODT、PDF 與 TXT 的比較？",
+        options: [
+          { id: 'A', text: "TXT 通常檔案大小較大" },
+          { id: 'B', text: "DOCX、ODT、PDF 一般比 TXT 檔案大" },
+          { id: 'C', text: "PDF 一定比 DOCX 更容易編輯" },
+          { id: 'D', text: "ODT 只可儲存純文字" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 5,
+        source: "DSE 2021 1A Q1",
+        question: "自動較正的功能是什麼？",
+        options: [
+          { id: 'A', text: "自動偵測並修正你在輸入時的錯誤，如拼字錯誤" },
+          { id: 'B', text: "自動生成目錄" },
+          { id: 'C', text: "自動合併文件" },
+          { id: 'D', text: "自動壓縮圖片" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 6,
+        source: "DSE 2021 1A Q6",
+        question: "目錄功能的作用是什麼？",
+        options: [
+          { id: 'A', text: "將文件變成 PDF" },
+          { id: 'B', text: "方便快速跳到文件的不同章節" },
+          { id: 'C', text: "減少檔案大小" },
+          { id: 'D', text: "自動修正拼字" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 7,
+        source: "DSE 2021 1A Q8",
+        question: "郵件合併的主要好處是什麼？",
+        options: [
+          { id: 'A', text: "減少重複的人手輸入，提升辦公效率" },
+          { id: 'B', text: "令文件變成純文字" },
+          { id: 'C', text: "令 PDF 更易被編輯" },
+          { id: 'D', text: "增加檔案壓縮比" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 8,
+        source: "DSE 2023 1A Q9",
+        question: "郵件合併中的「主文件」是什麼？",
+        options: [
+          { id: 'A', text: "儲存客戶資料的試算表" },
+          { id: 'B', text: "合併後的最終名單" },
+          { id: 'C', text: "建立邀請信範本的文件" },
+          { id: 'D', text: "印刷機設定檔" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 9,
+        source: "DSE 2022 1A Q8",
+        question: "郵件合併中的數據來源通常是什麼？",
+        options: [
+          { id: 'A', text: "資料庫檔案或試算表" },
+          { id: 'B', text: "圖片編輯器" },
+          { id: 'C', text: "PDF 處理器" },
+          { id: 'D', text: "音訊播放軟件" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 10,
+        source: "DSE 2024 1A Q3",
+        question: "圖像分為哪兩種？",
+        options: [
+          { id: 'A', text: "JPG 與 PNG" },
+          { id: 'B', text: "點陣圖像與向量圖像" },
+          { id: 'C', text: "靜態與動畫圖像" },
+          { id: 'D', text: "彩色與黑白圖像" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 11,
+        source: "DSE 2022 1A Q7",
+        question: "以下哪一項是點陣圖檔案格式？",
+        options: [
+          { id: 'A', text: "SVG" },
+          { id: 'B', text: "AI" },
+          { id: 'C', text: "BMP" },
+          { id: 'D', text: "ODT" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 12,
+        source: "DSE 2020 1A Q3",
+        question: "以下哪一項最能形容 PNG？",
+        options: [
+          { id: 'A', text: "支援透明背景，使用無損壓縮" },
+          { id: 'B', text: "只適合音訊存儲" },
+          { id: 'C', text: "一定比 JPG 檔案大" },
+          { id: 'D', text: "不適合網頁圖像" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 13,
+        source: "DSE 2023 1A Q11",
+        question: "以下哪一項格式支援透明背景？",
+        options: [
+          { id: 'A', text: "JPG" },
+          { id: 'B', text: "PNG" },
+          { id: 'C', text: "GIF" },
+          { id: 'D', text: "B 和 C" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 14,
+        source: "DSE 2025 1A Q4",
+        question: "在 HTML 中，只改變圖片的顯示大小而不改變原圖，下載的是不是同一張照片？",
+        options: [
+          { id: 'A', text: "否，因為顯示大小變小" },
+          { id: 'B', text: "是，因為只是顯示大小變化，實際大小不變" },
+          { id: 'C', text: "否，因為長寬比一定不同" },
+          { id: 'D', text: "是，因為檔案會自動壓縮" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 15,
+        source: "DSE 2021 1A Q5",
+        question: "以下哪一項最能比較 WAV 與 MP3？",
+        options: [
+          { id: 'A', text: "WAV 檔案通常較小" },
+          { id: 'B', text: "MP3 使用有損壓縮，檔案較小" },
+          { id: 'C', text: "MP3 沒有壓縮概念" },
+          { id: 'D', text: "WAV 用來製作網頁" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 16,
+        source: "DSE 2018 1B Q3",
+        question: "以下哪一項最能比較 AVI 與 MP4？",
+        options: [
+          { id: 'A', text: "AVI 的檔案通常較小" },
+          { id: 'B', text: "MP4 的檔案大小較小，跨平台性高" },
+          { id: 'C', text: "MP4 一定比 AVI 畫質低" },
+          { id: 'D', text: "AVI 適合網路串流" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 17,
+        source: "DSE 2019 1A Q5",
+        question: "一般而言，以下哪些轉換會明顯減少檔案大小？",
+        options: [
+          { id: 'A', text: "ODT → DOCX" },
+          { id: 'B', text: "WAV → MP3" },
+          { id: 'C', text: "BMP → JPG" },
+          { id: 'D', text: "(2) 和 (3)" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 18,
+        source: "DSE 2020 1A Q12",
+        question: "編輯投影片時，應考慮哪些因素？",
+        options: [
+          { id: 'A', text: "只考慮檔案大小" },
+          { id: 'B', text: "佈局、排版、用戶界面設計、多媒體和投影片次序" },
+          { id: 'C', text: "只考慮圖片格式" },
+          { id: 'D', text: "只考慮動畫效果" }
+        ],
+        correct: 'B'
+      },
+        {
+        id: 19,
+        source: "DSE 2024 1A Q9",
+        question: "使用網上演示工具來製作演示的優點是什麼？\n(1) 演示的檔案大小比演示軟件製作的為小\n(2) 用戶可同時互相協作以製作同一個演示\n(3) 可以有最新的功能用來製作演示",
+        options: [
+            { id: 'A', text: "只有 (1) 和 (2)" },
+            { id: 'B', text: "只有 (1) 和 (3)" },
+            { id: 'C', text: "只有 (2) 和 (3)" },
+            { id: 'D', text: "(1)、(2) 和 (3)" }
+        ],
+        correct: 'C'
+        },
+      {
+        id: 20,
+        source: "DSE 2021 1A Q7",
+        question: "志偉在演示檔內加入錄製旁白。下列哪句是正確的？\n(1) 演示的檔案大小增加。\n(2) 演示內的投影片數目增加。\n(3) 未能把視像嵌入附有旁白的投影片。",
+        options: [
+          { id: 'A', text: "只有 (1)" },
+          { id: 'B', text: "只有 (2)" },
+          { id: 'C', text: "只有 (1) 和 (3)" },
+          { id: 'D', text: "只有 (2) 和 (3)" }
+        ],
+        correct: 'A'
+      }
+    ];
+
+    const app = document.getElementById('app');
+
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+    ];
+
+    let state = {
+      view: 'menu',
+      quizType: null,
+      currentQuestion: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null
+    };
+
+    function getCurrentQuizData() {
+      return state.quizType === 'concept' ? conceptQuizData : dseQuizData;
+    }
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="MENU">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">檔案類型溫習圖鑑 / Q&amp;A</h2>
+
+            <button onclick="startConcepts()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-200 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始捕捉概念！
+            </button>
+
+            <button onclick="startQuiz()" class="mt-3 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始捕捉題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">1. 文本</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <p><b>純文字</b>：只儲存字符，沒有格式化，檔案格式為 <b>.txt</b>，檔案大小較小，常用記事本（Notepad）編輯。</p>
+                  <p><b>格式化文本</b>：可儲存字符及格式化資料，如字體、字型大小、顏色、粗斜體、段落、圖片等，檔案格式為 <b>.doc</b>、<b>.docx</b>、<b>.odt</b>、<b>.pdf</b>，檔案大小較大。</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">2. 文本檔案格式比較</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <p><b>TXT</b>：純文本、不含任何格式，適合快速讀寫、程序代碼，無壓縮，檔案極小。</p>
+                  <p><b>DOCX</b>：格式化文本，支援豐富字體樣式、超連結、多媒體元素，無損壓縮，小到中等。</p>
+                  <p><b>ODT</b>：開放格式文書處理器文件，適合日常辦公文書處理。</p>
+                  <p><b>PDF</b>：可保留文本格式，適合正式文件傳閱、合同、電子書、可攜式文件存儲。</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">3. 自動化功能（格式化文本）</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <p><b>自動較正</b>：自動偵測並修正輸入錯誤，如拼字錯誤。</p>
+                  <p><b>目錄功能</b>：方便快速跳到文件章節。</p>
+                  <p><b>郵件合併</b>：減少重複的人手輸入，提升辦公效率。</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">4. 圖像</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <p>圖像分為兩種：<b>點陣圖像</b> 和 <b>向量圖像</b>。</p>
+                  <p>點陣圖由像素構成，放大後容易失真；向量圖由數學公式構成，放大後不會失真。</p>
+                  <p>常見點陣圖格式：<b>.bmp</b>、<b>.raw</b>、<b>.jpg</b>、<b>.jpeg</b>、<b>.png</b>、<b>.gif</b>、<b>.heic</b>、<b>.webp</b></p>
+                  <p>常見向量圖格式：<b>.ai</b>、<b>.svg</b></p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">5. 音訊與視像</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <p><b>WAV</b>：無壓縮，音質最高，檔案非常大。</p>
+                  <p><b>MP3</b>：有損壓縮，最常見音樂格式，檔案較小。</p>
+                  <p><b>AVI</b>：無壓縮或輕微壓縮，檔案極大。</p>
+                  <p><b>MP4</b>：有損壓縮，常用於串流媒體平台，跨平台性高。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function startConcepts() {
+      state.quizType = 'concept';
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function startQuiz() {
+      state.quizType = 'dse';
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function renderQuiz() {
+      const quizData = getCurrentQuizData();
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">${state.quizType === 'concept' ? 'Concept Question' : 'DSE MC Question'}</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[150px] flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm min-h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `
+              <button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">
+                下一題 →
+              </button>
+            ` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const quizData = getCurrentQuizData();
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = percentage >= 80 ? "太強了！你係檔案類型高手！"
+              : percentage >= 60 ? "做得好！再接再厲！"
+              : "再接再厲！";
+
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT
+              : percentage >= 60 ? POKEMON_IMAGES.GOOD
+              : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <div class="flex gap-3 flex-wrap justify-center">
+            <button onclick="changeView('menu')" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+              返回圖鑑
+            </button>
+            <button onclick="startConcepts()" class="px-4 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              開始捕捉概念！
+            </button>
+            <button onclick="startQuiz()" class="px-4 py-3 bg-white text-blue-900 rounded-xl font-bold hover:bg-slate-100 shadow-lg transition-all">
+              開始捕捉題目！
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeView(view) { state.view = view; render(); }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      const quizData = getCurrentQuizData();
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      const quizData = getCurrentQuizData();
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

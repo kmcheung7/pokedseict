@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>二補碼 - 數據控制訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]"></div>
+
+  <script>
+    const quizData = [
+      {
+        id: 1,
+        source: "DSE 2024 1A Q1",
+        question: "1. 8 位元二進制補碼的範圍是什麼？",
+        options: [
+          { id: 'A', text: "−2⁷ 至 2⁷" },
+          { id: 'B', text: "−2⁷ 至 2⁷−1" },
+          { id: 'C', text: "−2⁷+1 至 2⁷" },
+          { id: 'D', text: "−2⁷+1 至 2⁷−1" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 2,
+        source: "DSE 2019 1A Q1",
+        question: "下列那項（些）關於二進制補碼的句子是正確的？\n（1）算術運算中不會出現溢出誤差。\n（2）8 位元數字的最大值是 0111 1111。\n（3）8 位元數字的最小值是 1111 1111。",
+        options: [
+          { id: 'A', text: "只有（1）" },
+          { id: 'B', text: "只有（2）" },
+          { id: 'C', text: "只有（1）和（3）" },
+          { id: 'D', text: "只有（2）和（3）" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 3,
+        source: "樣本試卷 DSE 2016 1A Q5（重溫）",
+        question: "1111 1111 是一個 8 位二進制補碼數字，其十進制數值是什麼？",
+        options: [
+          { id: 'A', text: "-1" },
+          { id: 'B', text: "0" },
+          { id: 'C', text: "1" },
+          { id: 'D', text: "255" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 4,
+        source: "2020 1A Q2（重溫概念）",
+        question: "1010 0001 是 8 位二補碼數字。其十進制值是多少？",
+        options: [
+          { id: 'A', text: "+95" },
+          { id: 'B', text: "-95" },
+          { id: 'C', text: "+17" },
+          { id: 'D', text: "-17" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 5,
+        source: "DSE 2013 1A Q11",
+        question: "在 8 位元二進制編碼中，以下哪些運作可引致溢出誤差？\n（1）兩個正整數相加\n（2）兩個正負數相加\n（3）一正整數和一負整數相加",
+        options: [
+          { id: 'A', text: "只有（1）和（2）" },
+          { id: 'B', text: "只有（1）和（3）" },
+          { id: 'C', text: "只有（2）和（3）" },
+          { id: 'D', text: "（1）、（2）和（3）" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 6,
+        source: "DSE 2021 1A Q2",
+        question: "4 位元二補碼的超出 −8 至 +7 會出現什麼？8 位元二補碼的超出 −128 至 +127 又會出現什麼？",
+        options: [
+          { id: 'A', text: "下溢錯誤" },
+          { id: 'B', text: "校驗錯誤" },
+          { id: 'C', text: "位移錯誤" },
+          { id: 'D', text: "上溢錯誤" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 7,
+        source: "DSE 2022 1A Q4",
+        question: "下列哪項以二進制補碼表示的 4 位元數字的加法運算，會引至上溢錯誤？",
+        options: [
+          { id: 'A', text: "0011 + 1001" },
+          { id: 'B', text: "1111 + 1111" },
+          { id: 'C', text: "1100 + 1011" },
+          { id: 'D', text: "1010 + 0100 + 0001" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 8,
+        source: "DSE 2025 1A Q4",
+        question: "下列哪項以二進制補碼表示的 8 位元數字的加法會得到 0000 0000？",
+        options: [
+          { id: 'A', text: "1110 1111 + 0001 0000" },
+          { id: 'B', text: "1110 1111 + 0001 0001" },
+          { id: 'C', text: "0111 1111 + 0000 0001" },
+          { id: 'D', text: "0000 0000 + 0000 0001" }
+        ],
+        correct: 'B'
+      }
+    ];
+
+    const app = document.getElementById('app');
+
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+    ];
+
+    let state = {
+      view: 'menu',
+      currentQuestion: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null
+    };
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="MENU">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">二補碼溫習圖鑑 / Q&amp;A</h2>
+
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始捕捉題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">1. 什麼是二補碼？</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  <ul class="space-y-2">
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>電腦只懂二進制 0/1，所以二補碼用來表示負數（以 1 為首位元）和正數（以 0 為首位元）。</span>
+                    </li>
+                    <div class="font-bold text-blue-600 mb-2">範圍（最小值 至 最大值）</div>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>4 位元：<b>−8</b> 至 <b>+7</b> (１０００ 至 ０１１１)</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>8 位元：<b>−128</b> 至 <b>+127</b> (１０００ ００００ 至 ０１１１ １１１１)</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">2. 二補碼表示法（負數/正數）</div>
+
+                <div class="text-slate-700 text-sm leading-relaxed space-y-4">
+                  <div>
+                    <div class="font-bold text-blue-600 mb-2">負數（首位是 1）</div>
+
+                    <div class="mb-2">
+                      假設要轉十進制的二補碼是：<b>１０１１ １０１０</b>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 text-sm">
+                      <div class="font-bold text-blue-700 mb-1">步驟</div>
+
+                      <div class="space-y-2">
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">①</div>
+                          <div>取反：<b>０１００ ０１０１</b>（變一補碼，即是 1 變 0，0 變 1）</div>
+                        </div>
+
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">②</div>
+                          <div>撳機加一：MODE→3→BIN→<b>０１００ ０１０１</b> ＋ １</div>
+                        </div>
+
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">③</div>
+                          <div>繼續撳機轉十進制：→EXE →DEC</div>
+                        </div>
+
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">④</div>
+                          <div>結果：<b>７０</b></div>
+                        </div>
+
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">⑤</div>
+                          <div>二補碼 1 開頭是負數，所以答案要加負號：<b>−７０</b></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="font-bold text-blue-600 mb-2">正數（首位是 0）</div>
+
+                    <div class="mb-2">
+                      假設要轉十進制的二補碼是：<b>0001 1001</b>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 text-sm">
+                      <div class="font-bold text-blue-700 mb-1">步驟</div>
+
+                      <div class="space-y-2">
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">①</div>
+                          <div>
+                            撳機轉十進制：MODE→3→BIN→<b>0001 1001</b>→EXE→DEC
+                            <div class="text-slate-500 text-xs mt-1">結果：25</div>
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2 items-start">
+                          <div class="font-bold text-blue-700">②</div>
+                          <div>二補碼 0 開頭是正數，所以答案保持正值：<b>+25</b></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">3. 上溢錯誤（超出範圍）</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  <ul class="space-y-2">
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>上溢錯誤又稱「溢出誤差」，通常發生在加法結果超出二補碼能表示的範圍。</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>4 位元：超出 −8 至 +7 → 上溢錯誤</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>8 位元：超出 −128 至 +127 → 上溢錯誤</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">•</span>
+                      <span>在二補碼中：<b>正+負不會溢出</b>；而 <b>正+正</b>、<b>負+負</b> 可能溢出。</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">Wild Question</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[140px] flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `
+              <button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">
+                下一隻 →
+              </button>
+            ` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = percentage >= 80 ? "太強了！你係二補碼高手！"
+              : percentage >= 60 ? "做得好！再接再厲！"
+              : "再接再厲！";
+
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT
+              : percentage >= 60 ? POKEMON_IMAGES.GOOD
+              : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <div class="flex gap-3">
+            <a href="index.html" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+              返回圖鑑
+            </a>
+            <button onclick="startQuiz()" class="px-4 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              再試一次
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeView(view) { state.view = view; render(); }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
