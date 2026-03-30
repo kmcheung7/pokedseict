@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon 學習圖鑑</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+        
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+        
+        /* 懸浮效果 */
+        .poke-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .poke-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* 寶可夢圖片懸浮動畫 */
+        .poke-img { transition: transform 0.3s ease; }
+        .poke-card:hover .poke-img { transform: scale(1.1); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- 頁面標題 -->
+    <header class="max-w-4xl mx-auto mb-10 text-center">
+        <h1 class="font-pixel text-2xl md:text-4xl text-blue-800 mb-4 drop-shadow-sm">Pokémon 學習圖鑑</h1>
+        <p class="text-slate-600 font-bold">選擇一個主題開始你的冒險吧！</p>
+    </header>
+
+    <!-- 主題列表 -->
+    <main class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        
+        <!-- 範例卡片 1 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-blue-200 flex flex-col items-center shadow-lg">
+            <a href="./A1.html" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" 
+                     alt="Pikachu" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">A1. 資訊處理簡介</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center"></p>
+        </div>
+
+        <!-- 範例卡片 2 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-emerald-200 flex flex-col items-center shadow-lg">
+            <a href="./A2.html" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" 
+                     alt="Bulbasaur" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">A2. 數據控制</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center"></p>
+        </div>
+
+        <!-- 範例卡片 3 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-red-200 flex flex-col items-center shadow-lg">
+            <a href="./A3.html" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png" 
+                     alt="Charmander" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">A3. 數制轉換_2^n</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center"></p>
+        </div>
+
+        <!-- 範例卡片 4 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-yellow-200 flex flex-col items-center shadow-lg">
+            <a href="https://example.com/topic4" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png" 
+                     alt="Eevee" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">XXX</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center">XXX</p>
+        </div>
+
+        <!-- 範例卡片 5 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-purple-200 flex flex-col items-center shadow-lg">
+            <a href="https://example.com/topic5" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png" 
+                     alt="Gengar" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">XXX</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center">XXX</p>
+        </div>
+
+        <!-- 範例卡片 6 -->
+        <div class="poke-card bg-white p-6 rounded-3xl border-4 border-pink-200 flex flex-col items-center shadow-lg">
+            <a href="https://example.com/topic6" class="cursor-pointer block mb-4">
+                <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png" 
+                     alt="Mewtwo" class="poke-img w-32 h-32 object-contain">
+            </a>
+            <h2 class="font-bold text-lg text-slate-800">XXX</h2>
+            <p class="text-xs text-slate-500 mt-2 text-center">XXX</p>
+        </div>
+
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="max-w-4xl mx-auto mt-12 text-center text-slate-400 text-xs">
+        <p>© 2026 Carmen Cheung</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>數據控制訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-over-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]">
+    <!-- 內容將由 JavaScript 動態載入 -->
+  </div>
+
+  <script>
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      OK: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+    ];
+
+    const quizData = [
+      { id: 1, source: "2025 1A Q3", question: "數據控制對資訊系統非常重要，這是因為：", options: [{ id: 'A', text: "它控制數據的操作" }, { id: 'B', text: "它減少處理時間" }, { id: 'C', text: "它加速數據傳輸" }, { id: 'D', text: "它確保輸入數據的準確性" }], correct: 'D' },
+      { id: 2, source: "2021 1A Q9", question: "在網上系統內要求用戶輸入密碼兩次的目的是什麼？", options: [{ id: 'A', text: "數據有效性檢驗" }, { id: 'B', text: "數據驗證" }, { id: 'C', text: "數據組織" }, { id: 'D', text: "數據預備" }], correct: 'B' },
+      { id: 3, source: "2017 DSE ICT 1A Q7", question: "當建構網上電子郵件戶口時，重新輸入密碼的目的是什麼？", options: [{ id: 'A', text: "數據收集" }, { id: 'B', text: "數據驗證" }, { id: 'C', text: "數據組織" }, { id: 'D', text: "數據有效性檢驗" }], correct: 'B' },
+      { id: 4, source: "2025 1A Q6", question: "當更改電郵戶口的密碼，以下哪個步驟是數據驗證的方法？", options: [{ id: 'A', text: "輸入用戶名稱" }, { id: 'B', text: "輸入舊密碼" }, { id: 'C', text: "輸入新密碼兩次" }, { id: 'D', text: "回答「密碼提示」問題" }], correct: 'C' },
+      { id: 5, source: "2019 1A Q11", question: "細看網上登記表格（輸入密碼及再次輸入密碼）。此網上登記會涉及下列哪（些）項目？\n(1) 數據驗證\n(2) 數據壓縮\n(3) 數據有效性檢驗", options: [{ id: 'A', text: "只有 (1)" }, { id: 'B', text: "只有 (2)" }, { id: 'C', text: "只有 (1) 和 (3)" }, { id: 'D', text: "只有 (2) 和 (3)" }], correct: 'C' },
+      { id: 6, source: "2020 1A Q1", question: "某香港身份證號碼被錯誤地輸入了電腦系統。下列哪些可幫助找出此錯誤？\n(1) 範圍檢查\n(2) 輸入數據兩次\n(3) 檢查數位", options: [{ id: 'A', text: "只有 (1) 和 (2)" }, { id: 'B', text: "只有 (1) 和 (3)" }, { id: 'C', text: "只有 (2) 和 (3)" }, { id: 'D', text: "(1)、(2) 和 (3)" }], correct: 'C' },
+      { id: 7, source: "2013 DSE ICT 1A Q9", question: "某數據傳輸系統採用奇偶檢測。下列已接收的編碼中，其中一個是無效的。它是哪一個？", options: [{ id: 'A', text: "0101 0101" }, { id: 'B', text: "1000 0100" }, { id: 'C', text: "1111 0001" }, { id: 'D', text: "0000 0011" }], correct: 'C' },
+      { id: 8, source: "2019 1A Q10", question: "某裝置在網絡內發送 8 位元的數據，最後一個位元為奇偶檢驗位。下列已接收的數據，其中一個有錯誤。它是哪一個？", options: [{ id: 'A', text: "0010 0010" }, { id: 'B', text: "1111 0000" }, { id: 'C', text: "0011 0011" }, { id: 'D', text: "1010 0111" }], correct: 'D' },
+      { id: 9, source: "2022 1A Q3", question: "輸入日期時，使用日曆框勝於文字框。其優點是什麼？\n(1) 避免無效日期\n(2) 確保輸入無誤\n(3) 提供一個用戶友善的界面", options: [{ id: 'A', text: "只有 (1) 和 (2)" }, { id: 'B', text: "只有 (1) 和 (3)" }, { id: 'C', text: "只有 (2) 和 (3)" }, { id: 'D', text: "(1)、(2) 和 (3)" }], correct: 'B' },
+      { id: 10, source: "2017 1A Q2", question: "有兩個在網上輸入日期的方法（日曆 vs 文字框）。使用日曆方法的好處是什麼？\n(1) 減少輸入錯誤\n(2) 更方便用戶使用\n(3) 以奇偶檢測來找出錯誤", options: [{ id: 'A', text: "只有 (1) 和 (2)" }, { id: 'B', text: "只有 (1) 和 (3)" }, { id: 'C', text: "只有 (2) 和 (3)" }, { id: 'D', text: "(1)、(2) 和 (3)" }], correct: 'A' },
+      { id: 11, source: "HKU P.43", question: "阿發想要更改帳戶電郵地址，系統要求重複輸入。當提交表單時，發生錯誤。這張網上表單應用了哪些數據控制方式？\n(1) 類型檢查\n(2) 完整性檢查\n(3) 輸入數據兩次作驗證", options: [{ id: 'A', text: "只有 (1) 和 (2)" }, { id: 'B', text: "只有 (1) 和 (3)" }, { id: 'C', text: "只有 (2) 和 (3)" }, { id: 'D', text: "(1)、(2) 和 (3)" }], correct: 'C' }
+    ];
+
+    let state = { view: 'menu', currentQuestion: 0, score: 0, answered: false, selectedAnswer: null };
+    const app = document.getElementById('app');
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="Eevee">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">數據控制訓練營挑戰賽</h2>
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始捕捉題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <!-- Boxes (replace flashcards) -->
+            <div class="space-y-4">
+              <!-- Box 1 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">1. 數據控制</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  數據控制旨在確保輸入數據的準確性，分為兩大類：
+                  <ul class="mt-3 space-y-2">
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">• 數據驗證：</span>
+                      <span>透過輸入數據兩次來比對是否一致。</span>
+                    </li>
+                    <li class="flex gap-2 items-start">
+                      <span class="font-bold text-blue-600">• 數據有效性檢驗：</span>
+                      <span>確保數據符合預設的規則與限制。</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Box 2 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">2. 數據有效性檢驗方法</div>
+                <div class="text-slate-700 text-sm leading-relaxed">
+                  <div class="space-y-2">
+                    <div><span class="font-bold text-blue-600">唯一性檢查</span>　　確保數據在資料庫中不重複（如學生編號）。</div>
+                    <div><span class="font-bold text-blue-600">完整性檢查</span>　　確保必填欄位必須輸入數據，不可留空。</div>
+                    <div><span class="font-bold text-blue-600">固定值檢查</span>　　數據必須為預設清單中的選項（如性別）。</div>
+                    <div><span class="font-bold text-blue-600">範圍檢查</span>　　　數據必須在特定數值範圍內（如年齡 12-18）。</div>
+                    <div><span class="font-bold text-blue-600">類型檢查</span>　　　數據必須為特定格式（如只可輸入數字）。</div>
+                    <div><span class="font-bold text-blue-600">長度檢查</span>　　　數據長度必須符合要求（如電話號碼 8 位）。</div>
+                    <div><span class="font-bold text-blue-600">格式檢查</span>　　　數據必須符合特定樣式（如電郵地址必須包含 @）。</div>
+                    <div><span class="font-bold text-blue-600">一致性檢查</span>　　確保多個欄位邏輯合理（如結束日期必須在開始日期之後）。</div>
+                    <div><span class="font-bold text-blue-600">檢查數位</span>　　　用於驗證號碼是否正確（如身份證號碼末位的校驗碼）。</div>
+                    <div><span class="font-bold text-blue-600">奇偶檢驗</span>　　　檢查傳輸數據位元總數的奇偶性以發現錯誤。</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Box 3 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">3. 表單元素</div>
+
+                <div class="overflow-x-auto">
+                  <table class="min-w-[520px] w-full text-sm text-slate-700 border-separate border-spacing-y-2">
+                    <thead>
+                      <tr class="bg-slate-50 text-slate-700">
+                        <th class="px-3 py-2 text-left font-bold">元素名稱</th>
+                        <th class="px-3 py-2 text-left font-bold">HTML 標籤</th>
+                        <th class="px-3 py-2 text-left font-bold">說明</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">文本框</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;input type="text"&gt;</td>
+                        <td class="px-3 py-3">通用輸入，可進行各類檢查。</td>
+                      </tr>
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">單選按鈕</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;input type="radio"&gt;</td>
+                        <td class="px-3 py-3">限制用戶只能從選項中選一項。</td>
+                      </tr>
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">複選框</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;input type="checkbox"&gt;</td>
+                        <td class="px-3 py-3">用於多項選擇。</td>
+                      </tr>
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">下拉選單</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;select&gt;</td>
+                        <td class="px-3 py-3">限制用戶從預設清單中選擇。</td>
+                      </tr>
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">滑桿</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;input type="range"&gt;</td>
+                        <td class="px-3 py-3">數值範圍選擇，直觀且自動符合限制。</td>
+                      </tr>
+                      <tr>
+                        <td class="px-3 py-3 whitespace-nowrap font-semibold text-slate-600">日期選擇器</td>
+                        <td class="px-3 py-3 whitespace-nowrap text-blue-600 font-mono">&lt;input type="date"&gt;</td>
+                        <td class="px-3 py-3">提供日曆界面，確保日期格式正確。</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">Wild Question</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[130px] flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `<button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">下一隻 →</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = percentage >= 80 ? "太強了！你是數據控制大師！"
+              : percentage >= 60 ? "做得好！繼續保持！"
+              : "再接再厲！";
+
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT
+              : percentage >= 60 ? POKEMON_IMAGES.GOOD
+              : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <a href="index.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+            返回圖鑑首頁
+          </a>
+
+          <div class="mt-3">
+            <button onclick="startQuiz()" class="px-6 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              再試一次
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeView(view) { state.view = view; render(); }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

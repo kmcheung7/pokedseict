@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pokémon DSE 測驗圖鑑</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .font-pixel { font-family: 'Press Start 2P', cursive; }
+
+        .option-btn { transition: all 0.2s ease; }
+        .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+        .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+        .disabled { pointer-events: none; }
+
+        .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+
+    <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]">
+        <!-- 內容將由 JavaScript 動態載入 -->
+    </div>
+
+    <script>
+        const pokeImages = [
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+        ];
+
+        const flashcards = [
+            { title: "位元 (Bit)", content: "電腦數據的最小單位，只能是 0 或 1。", color: "border-blue-400" },
+            { title: "字節 (Byte)", content: "1 Byte = 8 Bits。通常用來表示一個字元。", color: "border-emerald-400" },
+            { title: "2^n 公式", content: "n 個位元可表示 \\(2^n\\) 個不同的組合。", color: "border-purple-400" },
+            { title: "十六進制", content: "使用 0-9 及 A-F，每位元可代表 4 個二進制位。", color: "border-orange-400" },
+            { title: "RGB 顏色", content: "24 位元顏色 = 8位紅 + 8位綠 + 8位藍。", color: "border-pink-400" }
+        ];
+
+        const quizData = [
+            { id: 1, source: "DSE 2020 1A Q4", question: "某公司有 30,000 名僱員，每位僱員均有一個職員編號。表示職員編號最少需要多少個位元？", options: [{ id: 'A', text: "5" }, { id: 'B', text: "14" }, { id: 'C', text: "15" }, { id: 'D', text: "32" }], correct: 'C' },
+            { id: 2, source: "DSE 2018 1A Q7", question: "某公司設計了一個處理員工記錄的應用程式。每筆記錄中，以 10 個位元來儲存員工號碼。此應用程式可支援多少筆員工記錄？", options: [{ id: 'A', text: "2^10" }, { id: 'B', text: "2^12" }, { id: 'C', text: "2^22" }, { id: 'D', text: "2^96" }], correct: 'A' },
+            { id: 3, source: "DSE 2013 1A Q6", question: "某複合鎖由 5 個獨立開關組成。各開關能設至「開」或「關」位置。這個鎖有多少個不同開關位置組合？", options: [{ id: 'A', text: "5" }, { id: 'B', text: "10" }, { id: 'C', text: "25" }, { id: 'D', text: "32" }], correct: 'D' },
+            { id: 4, source: "DSE 2023 1A Q2", question: "七劃管可以產生多少個不同的圖案？（除了所有劃都關掉之外）", options: [{ id: 'A', text: "10" }, { id: 'B', text: "63" }, { id: 'C', text: "127" }, { id: 'D', text: "255" }], correct: 'C' },
+            { id: 5, source: "DSE 2015 1A Q5", question: "有 10,000 名選手參加比賽。每枚標籤最少需要多少儲存容量？", options: [{ id: 'A', text: "1 字節" }, { id: 'B', text: "2 字節" }, { id: 'C', text: "3 字節" }, { id: 'D', text: "4 字節" }], correct: 'B' },
+            { id: 6, source: "DSE 2019 1A Q12", question: "一個 IP 位址 (IPv6) 包括 8 組以冒號分隔的 4 位十六進制數字。此 IP 編址可有多少個位址？", options: [{ id: 'A', text: "2^32" }, { id: 'B', text: "16^32" }, { id: 'C', text: "32^2" }, { id: 'D', text: "32^16" }], correct: 'B' },
+            { id: 7, source: "DSE 2024 1A Q6", question: "某網絡卡有一個由 6 組 2 個位的十六進制數字組成的 MAC 位址。此格式可以表示多少個可能的位址？", options: [{ id: 'A', text: "2^6" }, { id: 'B', text: "2^12" }, { id: 'C', text: "2^24" }, { id: 'D', text: "2^48" }], correct: 'D' },
+            { id: 8, source: "DSE 2025 1A Q7", question: "24 位元顯示卡可處理最多 ________ 種不同的顏色。", options: [{ id: 'A', text: "2 x 24" }, { id: 'B', text: "8 x 24" }, { id: 'C', text: "24^2" }, { id: 'D', text: "2^24" }], correct: 'D' }
+        ];
+
+        let state = { view: 'menu', currentQuestion: 0, score: 0, answered: false, selectedAnswer: null };
+        const app = document.getElementById('app');
+
+        function render() {
+            if (state.view === 'menu') renderMenu();
+            else if (state.view === 'quiz') renderQuiz();
+            else if (state.view === 'result') renderResult();
+        }
+
+        function renderMenu() {
+            app.innerHTML = `
+                <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+                    <div class="flex flex-col items-center justify-center p-6 text-center">
+                        <img src="${pokeImages[0]}" class="w-24 h-24 drop-shadow-2xl" alt="Pikachu">
+                        <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+                        <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">ICT 測驗挑戰賽</h2>
+                        <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+                            開始捕捉題目！
+                        </button>
+                    </div>
+
+                    <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+                        <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+                        </h3>
+
+                        <div class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar">
+                            ${flashcards.map(card => `
+                                <div class="w-[180px] h-[230px] shrink-0 box-border bg-yellow-50 p-4 rounded-xl border-t-4 ${card.color} shadow-sm flex flex-col justify-center">
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1 leading-tight">${card.title}</h4>
+                                    <p class="text-xs text-slate-600 leading-relaxed flex-1 overflow-hidden">${card.content}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="text-center">
+                            <span class="text-[10px] text-slate-400 font-bold">向右滑動查看更多</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuiz() {
+            const q = quizData[state.currentQuestion];
+            const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+            app.innerHTML = `
+                <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+                    <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+                        <span class="font-pixel text-[8px]">Wild Question</span>
+                        <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+                    </div>
+
+                    <div class="p-4 flex-grow flex flex-col items-center">
+                        <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[130px] flex flex-col justify-center">
+                            <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+                            <p class="text-sm font-bold text-slate-800 leading-snug">${q.question}</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-2 w-full">
+                            ${q.options.map(opt => `
+                                <button
+                                    onclick="handleAnswer('${opt.id}')"
+                                    class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center ${state.answered ? 'disabled' : ''} ${state.answered && opt.id === q.correct ? 'correct' : ''} ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}"
+                                >
+                                    <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                                    <span class="leading-tight">${opt.text}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="p-3 border-t bg-white flex justify-end">
+                        ${state.answered ? `<button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">下一隻 →</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResult() {
+            app.innerHTML = `
+                <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+                    <img src="${pokeImages[4]}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Mewtwo">
+                    <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+                    <div class="text-4xl font-pixel text-blue-600 mb-4">${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span></div>
+                    <p class="text-sm text-slate-600 mb-6">你成功捕捉到了 ${state.score} 題正確答案！</p>
+                    <a href="index.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">返回圖鑑首頁</a>
+                </div>
+            `;
+        }
+
+        function changeView(view) {
+            state.view = view;
+            render();
+        }
+
+        function startQuiz() {
+            state.currentQuestion = 0;
+            state.score = 0;
+            state.answered = false;
+            state.selectedAnswer = null;
+            state.view = 'quiz';
+            render();
+        }
+
+        function handleAnswer(id) {
+            if (state.answered) return;
+            state.answered = true;
+            state.selectedAnswer = id;
+            if (id === quizData[state.currentQuestion].correct) {
+                state.score++;
+            }
+            render();
+        }
+
+        function nextQuestion() {
+            if (state.currentQuestion + 1 < quizData.length) {
+                state.currentQuestion++;
+                state.answered = false;
+                state.selectedAnswer = null;
+                render();
+            } else {
+                state.view = 'result';
+                render();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>

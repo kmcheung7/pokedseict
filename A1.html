@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pokémon 資訊訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]">
+    <!-- 內容將由 JavaScript 動態載入 -->
+  </div>
+
+  <script>
+    const POKEMON_IMAGES = {
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      OK: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    // 讓 Pokemon 圖鑑的風格沿用 A3：用一組圖當作輪播/題目圖
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+    ];
+
+    const quizData = [
+      { id: 1, source: "DSE 2016 MC Q13", question: "下列哪項配對是不正確的？", options: [{ id: 'A', text: "從業員: 資訊總監(CIO)" }, { id: 'B', text: "軟件: 操作系統" }, { id: 'C', text: "數據: FTP" }, { id: 'D', text: "網絡: WAN" }], correct: 'C' },
+      { id: 2, source: "DSE 2022 MC Q21", question: "當開發一個資訊管理系統時，下列哪項應是首要考慮？", options: [{ id: 'A', text: "涉及的技術" }, { id: 'B', text: "涉及的人員" }, { id: 'C', text: "系統的成本" }, { id: 'D', text: "系統的目的" }], correct: 'D' },
+      { id: 3, source: "DSE 2025 MC Q2", question: "以下哪項/些將影響資訊系統的輸出？\n(1) 更改輸入數據\n(2) 使用不同的 CPU\n(3) 更改儲存裝置的類型", options: [{ id: 'A', text: "只有 (1)" }, { id: 'B', text: "只有 (2)" }, { id: 'C', text: "只有 (1) 和 (3)" }, { id: 'D', text: "只有 (2) 和 (3)" }], correct: 'A' },
+      { id: 4, source: "DSE 2022 1A Q6", question: "下列哪項是正確的？", options: [{ id: 'A', text: "數據收集: 製作統計圖表" }, { id: 'B', text: "數據預備: 輸入前核實問卷資料" }, { id: 'C', text: "數據處理: 把問卷排序以便輸入數據" }, { id: 'D', text: "數據組織: 設計線上問卷" }], correct: 'B' },
+      { id: 5, source: "DSE 2020 1A Q13", question: "下列哪項處理是數據收集的例子？", options: [{ id: 'A', text: "讀取煤氣表讀數。" }, { id: 'B', text: "插入銀行卡至自動櫃員機。" }, { id: 'C', text: "把相片放置在掃描器上掃描。" }, { id: 'D', text: "把寫在分紙上的測驗分數輸入至試算表。" }], correct: 'A' }
+    ];
+
+    const flashcards = [
+      { title: "資訊系統", content: "從業員／硬件／軟件／數據／網絡／流程", color: "border-blue-400" },
+      { title: "IPO 週期", content: "輸入 Input → 處理 Process → 輸出 Output", color: "border-emerald-400" },
+      { title: "步驟(1)", content: "數據收集：設計問卷、收集數據", color: "border-purple-400" },
+      { title: "步驟(2)", content: "數據預備：校對、核實資料", color: "border-orange-400" },
+      { title: "步驟(3)", content: "數據處理/組織：輸入、分析製作圖表", color: "border-pink-400" }
+    ];
+
+    let state = { view: 'menu', currentQuestion: 0, score: 0, answered: false, selectedAnswer: null };
+    const app = document.getElementById('app');
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.GOOD}" class="w-24 h-24 drop-shadow-2xl" alt="Pikachu">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">資訊訓練營挑戰賽</h2>
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始捕捉題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar">
+              ${flashcards.map(card => `
+                <div class="w-[180px] h-[230px] shrink-0 box-border bg-yellow-50 p-4 rounded-xl border-t-4 ${card.color} shadow-sm flex flex-col justify-center">
+                  <h4 class="font-bold text-slate-800 text-sm mb-1 leading-tight">${card.title}</h4>
+                  <p class="text-xs text-slate-600 leading-relaxed flex-1 overflow-hidden">${card.content}</p>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="text-center">
+              <span class="text-[10px] text-slate-400 font-bold">向右滑動查看更多</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">Wild Question</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm h-[130px] flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `<button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">下一隻 →</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = "再接再厲！";
+      let img = POKEMON_IMAGES.BAD;
+
+      if (percentage >= 100) { msg = "太強了！你是資訊大師！"; img = POKEMON_IMAGES.GREAT; }
+      else if (percentage >= 60) { msg = "做得好！繼續保持！"; img = POKEMON_IMAGES.GOOD; }
+      else if (percentage >= 40) { msg = "還不錯，再加油！"; img = POKEMON_IMAGES.OK; }
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-4">${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span></div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <div class="flex gap-3">
+            <a href="index.html" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+              返回圖鑑首頁
+            </a>
+            <button onclick="startQuiz()" class="px-6 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              再試一次
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function changeView(view) {
+      state.view = view;
+      render();
+    }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
