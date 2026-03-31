@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pokemon SQL Game (JS/HTML)</title>
+
+  <!-- Tailwind (to match your JSX classes) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: {} } }
+  </script>
+
+  <style>
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.95; }
+      50% { transform: scale(1.06); opacity: 1; }
+    }
+    .animate-pulse-custom { animation: pulse 1.4s ease-in-out infinite; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+  <div id="app"></div>
+
+  <script>
+    // --- 寶可夢資料庫 ---
+    const POKEMON_DATA = [
+      { id: 1, name: '皮卡丘', type: '電', height: 0.4 },
+      { id: 2, name: '雷丘', type: '電', height: 0.8 },
+      { id: 3, name: '小火龍', type: '火', height: 0.6 },
+      { id: 4, name: '噴火龍', type: '火', height: 1.7 },
+      { id: 5, name: '火球鼠', type: '火', height: 0.5 },
+      { id: 6, name: '傑尼龜', type: '水', height: 0.5 },
+      { id: 7, name: '可達鴨', type: '水', height: 0.8 },
+      { id: 8, name: '妙蛙種子', type: '草', height: 0.7 },
+      { id: 9, name: '走路草', type: '草', height: 0.5 },
+      { id: 10, name: '喵喵', type: '一般', height: 0.4 },
+    ];
+
+    // --- 題目設定 ---
+    const LEVELS = [
+      { sql: "SELECT NAME FROM POKÉMON WHERE TYPE = '火';", headers: ['NAME'], answer: [['小火龍'], ['噴火龍'], ['火球鼠']], distractors: ['皮卡丘', '傑尼龜'] },
+      { sql: "SELECT NAME FROM POKÉMON WHERE HEIGHT <= 0.4;", headers: ['NAME'], answer: [['皮卡丘'], ['喵喵']], distractors: ['噴火龍', '雷丘'] },
+      { sql: "SELECT NAME FROM POKÉMON ORDER BY HEIGHT DESC LIMIT 3;", headers: ['NAME'], answer: [['噴火龍'], ['雷丘'], ['可達鴨']], distractors: ['喵喵', '走路草'] },
+      { sql: "SELECT NAME FROM POKÉMON WHERE NAME LIKE '%火%';", headers: ['NAME'], answer: [['小火龍'], ['噴火龍'], ['火球鼠']], distractors: ['皮卡丘', '妙蛙種子'] },
+      { 
+        sql: "SELECT TYPE, SUM(HEIGHT)\nFROM POKÉMON\nWHERE HEIGHT > 0.5\nGROUP BY TYPE\nHAVING COUNT(*) > 1;", 
+        headers: ['TYPE', 'SUM(HEIGHT)'], 
+        answer: [['火', '2.3']], 
+        distractors: ['電', '0.8', '水', '0.7', '1.5'] 
+      },
+      { sql: "SELECT NAME FROM POKÉMON WHERE TYPE = '電' ORDER BY HEIGHT ASC;", headers: ['NAME'], answer: [['皮卡丘'], ['雷丘']], distractors: ['噴火龍', '喵喵'] },
+      { sql: "SELECT AVG(HEIGHT) FROM POKÉMON WHERE TYPE = '水';", headers: ['AVG(HEIGHT)'], answer: [['0.65']], distractors: ['0.5', '0.8', '1.3'] },
+      { sql: "SELECT TYPE, COUNT(*) FROM POKÉMON GROUP BY TYPE HAVING COUNT(*) > 1;", headers: ['TYPE', 'COUNT(*)'], answer: [['電', '2'], ['火', '3'], ['水', '2'], ['草', '2']], distractors: ['1', '5'] },
+      { sql: "SELECT MAX(HEIGHT) FROM POKÉMON WHERE TYPE != '火';", headers: ['MAX(HEIGHT)'], answer: [['0.8']], distractors: ['1.7', '0.6', '0.5'] },
+      { sql: "SELECT NAME FROM POKÉMON WHERE TYPE = '電' AND NAME LIKE '_丘';", headers: ['NAME'], answer: [['雷丘']], distractors: ['皮卡丘', '噴火龍', '喵喵'] }
+    ];
+
+    // --- 狀態 ---
+    let gameState = 'intro'; // intro | playing | finished
+    let currentLevel = 0;
+    let userGrid = [];
+    let feedback = null; // null | correct | wrong
+    let score = 0;
+
+    const currentTask = () => LEVELS[currentLevel];
+
+    function initializeGrid() {
+      const rows = currentTask().answer.length;
+      const cols = currentTask().headers.length;
+      return Array(rows).fill(null).map(() => Array(cols).fill(null));
+    }
+
+    function handleChipClick(chip) {
+      const grid = (userGrid.length > 0) ? structuredClone(userGrid) : initializeGrid();
+
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[r].length; c++) {
+          if (grid[r][c] === null) {
+            grid[r][c] = chip;
+            userGrid = grid;
+            render();
+            return;
+          }
+        }
+      }
+    }
+
+    function removeCell(r, c) {
+      const grid = structuredClone(userGrid);
+      grid[r][c] = null;
+      userGrid = grid;
+      render();
+    }
+
+    function checkAnswer() {
+      const isCorrect = JSON.stringify(userGrid) === JSON.stringify(currentTask().answer);
+      if (isCorrect) {
+        feedback = 'correct';
+        score += 1;
+      } else {
+        feedback = 'wrong';
+      }
+      render();
+    }
+
+    function nextLevel() {
+      if (currentLevel < LEVELS.length - 1) {
+        currentLevel += 1;
+        userGrid = [];
+        feedback = null;
+        render();
+      } else {
+        gameState = 'finished';
+        render();
+      }
+    }
+
+    // --- 簡單 SVG 替代 lucide-react ---
+    function IconDatabase() {
+      return `
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+          <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"></path>
+          <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path>
+        </svg>
+      `;
+    }
+
+    function IconShieldCheck() {
+      return `
+        <svg class="w-20 h-20 mx-auto mb-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+      `;
+    }
+
+    function IconRefresh() {
+      return `
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+          <polyline points="21 3 21 9 15 9"></polyline>
+        </svg>
+      `;
+    }
+
+    function IconCheckCircle() {
+      return `
+        <svg class="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M22 12l-8 8-4-4"></path>
+        </svg>
+      `;
+    }
+
+    function IconAlertTriangle() {
+      return `
+        <svg class="w-6 h-6 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      `;
+    }
+
+    // --- 渲染 ---
+    function render() {
+      const app = document.getElementById('app');
+      const task = currentTask();
+
+      if (gameState === 'intro') {
+        app.innerHTML = `
+          <div class="min-h-screen bg-slate-900 p-6 flex items-center justify-center font-sans text-white">
+            <div class="max-w-md bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 text-center">
+              <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/94.png"
+                   alt="Gengar"
+                   class="w-32 h-32 mx-auto mb-4 animate-pulse-custom" />
+              <h1 class="text-2xl font-bold mb-4">資料庫安全警報</h1>
+              <p class="text-slate-300 mb-6 leading-relaxed">
+                寶可夢資料庫遭到惡意竄改！<br/><br/>
+                你需要通過基礎與進階的 SQL 考驗，修復數據庫的完整性。
+              </p>
+              <button id="startBtn"
+                class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition-all">
+                開始修復任務
+              </button>
+            </div>
+          </div>
+        `;
+        document.getElementById('startBtn').addEventListener('click', () => {
+          gameState = 'playing';
+          currentLevel = 0;
+          userGrid = [];
+          feedback = null;
+          score = 0;
+          render();
+        });
+        return;
+      }
+
+if (gameState === 'finished') {
+  const finalScore = (score / LEVELS.length) * 100;
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-slate-900 p-6 flex items-center justify-center text-white">
+      <div class="max-w-md w-full bg-slate-800 p-8 rounded-2xl text-center shadow-2xl border border-slate-700">
+        
+        <img
+          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/82.png"
+          alt="夢可寶 三合一磁怪"
+          class="w-32 h-32 mx-auto mb-4 rounded-lg object-contain"
+        />
+
+        ${IconShieldCheck()}
+        <h2 class="text-3xl font-bold mb-2">任務總結：</h2>
+        <div class="text-6xl font-black text-purple-400 my-6">${finalScore.toFixed(0)}%</div>
+        <p class="mb-8 text-slate-300">
+          ${
+            finalScore >= 100
+              ? "系統完整性已恢復！感謝您，寶可夢資料庫現已安全，所有惡意竄改皆已清除。"
+              : finalScore >= 80
+                ? "修復成果優異！數據完整性大幅提升，但仍建議進一步檢查潛在異常。"
+                : finalScore >= 60
+                  ? "修復已達基本要求！仍存在少量異常資料，建議再次驗證 SQL 結果。"
+                  : "修復進度偏低！數據完整性仍有較大風險，請重新執行並仔細修正關鍵查詢。"
+          }
+        </p>
+
+        <div class="flex flex-col gap-2">
+          <button
+            id="reloadBtn"
+            class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 mx-auto">
+            ${IconRefresh()} 重新執行檢測
+          </button>
+
+          <button
+            id="backBtn"
+            class="bg-slate-700 hover:bg-slate-600 text-white px-8 py-3 rounded-lg font-bold flex items-center gap-2 mx-auto">
+            返回圖鑑
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('reloadBtn').addEventListener('click', () => window.location.reload());
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    // 確保使用同資料夾的 index.html；若你的 index.html 在子資料夾，路徑要改
+    window.location.href = './index.html';
+  });
+
+  return;
+}
+     
+
+      // playing
+      const gridToShow = (userGrid.length > 0) ? userGrid : initializeGrid();
+      const chips = [...task.answer.flat(), ...task.distractors].sort(() => Math.random() - 0.5);
+
+      app.innerHTML = `
+        <div class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+          <div class="max-w-4xl mx-auto">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
+              <div class="flex items-center gap-2 mb-3 text-slate-700 font-bold">
+                ${IconDatabase()}
+                <span>POKÉMON 資料表 (參考)</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-center border-collapse">
+                  <thead class="bg-slate-100">
+                    <tr>
+                      <th class="p-2 border">ID</th>
+                      <th class="p-2 border">NAME</th>
+                      <th class="p-2 border">TYPE</th>
+                      <th class="p-2 border">HEIGHT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${POKEMON_DATA.map(p => `
+                      <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2 border">${p.id}</td>
+                        <td class="p-2 border font-bold">${p.name}</td>
+                        <td class="p-2 border">${p.type}</td>
+                        <td class="p-2 border">${p.height}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-700">任務 #${currentLevel + 1} / ${LEVELS.length}</h2>
+                <span class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-mono font-bold">SQL 修復指令</span>
+              </div>
+
+              <div class="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-base mb-6 shadow-inner overflow-x-auto whitespace-pre-line">
+                ${task.sql.replaceAll('\n', '<br/>')}
+              </div>
+
+              <div class="mb-6">
+                <p class="text-sm text-slate-500 mb-2">查詢結果表格：</p>
+                <div class="overflow-x-auto border-2 border-dashed border-slate-200 rounded-lg p-2 bg-slate-50">
+                  <table class="w-full text-center border-collapse">
+                    <thead>
+                      <tr class="bg-slate-200">
+                        ${task.headers.map(h => `
+                          <th class="p-2 border border-slate-300 text-xs text-slate-600">${h}</th>
+                        `).join('')}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      ${gridToShow.map((row, rIdx) => `
+                        <tr>
+                          ${row.map((cell, cIdx) => `
+                            <td class="p-1 border border-slate-300 h-10 w-24">
+                              ${
+                                cell
+                                  ? `<button data-r="${rIdx}" data-c="${cIdx}"
+                                      class="bg-purple-500 text-white w-full h-full rounded text-sm font-bold hover:bg-red-500 transition-colors">
+                                      ${cell}
+                                    </button>`
+                                  : `<div class="w-full h-full bg-white border border-dashed border-slate-300 rounded"></div>`
+                              }
+                            </td>
+                          `).join('')}
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200" id="chipRow">
+                ${chips.map((chip) => `
+                  <button class="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:border-purple-500 hover:text-purple-600 transition-all shadow-sm active:scale-95 font-medium"
+                          data-chip="${String(chip).replaceAll('"','&quot;')}">
+                    ${chip}
+                  </button>
+                `).join('')}
+              </div>
+
+              <div class="flex justify-between items-center">
+                <div class="text-sm text-slate-400">得分: ${score}</div>
+                <div class="flex gap-3">
+                  ${
+                    feedback === null
+                      ? `<button id="submitBtn" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg font-bold transition-all">
+                           提交答案
+                         </button>`
+                      : `<button id="nextBtn" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2">
+                           ${currentLevel === LEVELS.length - 1 ? '查看結果' : '下一題'}
+                         </button>`
+                  }
+                </div>
+              </div>
+
+              ${
+                feedback
+                  ? `
+                  <div class="mt-4 p-4 rounded-lg ${feedback === 'correct' ? 'bg-green-100 text-green-800' : 'bg-red-100'}" id="feedbackBox">
+                    <div class="flex items-center gap-3 mb-2">
+                      ${feedback === 'correct' ? IconCheckCircle() : IconAlertTriangle()}
+                      <p class="font-bold">
+                        ${feedback === 'correct' ? "正確！數據已修復。" : "錯誤！請參考正確答案："}
+                      </p>
+                    </div>
+
+                    ${
+                      feedback === 'wrong'
+                        ? `
+                        <div class="mt-2 bg-white p-2 rounded border border-red-200 overflow-x-auto">
+                          <table class="w-full text-xs text-center border-collapse">
+                            <thead>
+                              <tr class="bg-red-50">
+                                ${task.headers.map(h => `<th class="p-1 border text-red-800">${h}</th>`).join('')}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${task.answer.map(row => `
+                                <tr>
+                                  ${row.map(cell => `<td class="p-1 border text-red-600 font-bold">${cell}</td>`).join('')}
+                                </tr>
+                              `).join('')}
+                            </tbody>
+                          </table>
+                        </div>`
+                        : ''
+                    }
+                  </div>
+                  `
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Bind events
+      document.querySelectorAll('#chipRow button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const chip = btn.getAttribute('data-chip');
+          handleChipClick(chip);
+        });
+      });
+
+      document.querySelectorAll('button[data-r][data-c]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const r = Number(btn.getAttribute('data-r'));
+          const c = Number(btn.getAttribute('data-c'));
+          removeCell(r, c);
+        });
+      });
+
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) submitBtn.addEventListener('click', checkAnswer);
+
+      const nextBtn = document.getElementById('nextBtn');
+      if (nextBtn) nextBtn.addEventListener('click', nextLevel);
+    }
+
+    // Start
+    render();
+  </script>
+</body>
+</html>

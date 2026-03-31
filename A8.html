@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>SQL 數據庫 - 資訊處理訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #cbd5e1; padding: 4px; text-align: center; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-[8px] border-yellow-400 max-h-[100vh]"></div>
+
+  <script>
+    const quizData = [
+      {
+        id: 1,
+        source: "HKDSE 2021 1A Q4",
+        question: "在數據庫軟件內建構數據庫表時，用戶通常設定什麼？\n(1) 每個欄的數據類型\n(2) 最多的記錄數目\n(3) 主關鍵碼",
+        options: [
+          { id: 'A', text: "只有 (1) 和 (2)" },
+          { id: 'B', text: "只有 (1) 和 (3)" },
+          { id: 'C', text: "只有 (2) 和 (3)" },
+          { id: 'D', text: "(1)、(2) 和 (3)" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 2,
+        source: "HKDSE 2024 1A Q13",
+        question: "以下哪個／些體育學會的會員資料可定義為布爾 (Boolean) 數據類型？\n(1) VIP 會員\n(2) 銀行帳戶號碼\n(3) 教育水平",
+        options: [
+          { id: 'A', text: "只有 (1)" },
+          { id: 'B', text: "只有 (2)" },
+          { id: 'C', text: "只有 (1) 和 (3)" },
+          { id: 'D', text: "只有 (2) 和 (3)" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 3,
+        source: "HKDSE 2024 1A Q7",
+        question: "以下哪句關於數據庫的描述是正確的？",
+        options: [
+          { id: 'A', text: "物件連接是用來調整數據庫報告的版面。" },
+          { id: 'B', text: "數據庫內的查詢是用來提取數據庫中的資訊。" },
+          { id: 'C', text: "數據庫內的報告是用來幫助用戶儲存數據。" },
+          { id: 'D', text: "物件嵌入是用來執行應用程式。" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 4,
+        source: "HKDSE 2015 1A Q14",
+        question: "表格 MACHINE 中有四筆記錄。下列 SQL 指令的輸出是什麼？\nSELECT CODE FROM MACHINE WHERE CLASS <> 'V1' AND PT < 80",
+        table: `
+          <table class="text-[10px] mb-2 bg-white">
+            <tr class="bg-slate-100 font-bold"><td>CLASS</td><td>CODE</td><td>PT</td></tr>
+            <tr><td>V1</td><td>15</td><td>80</td></tr>
+            <tr><td>V2</td><td>16</td><td>80</td></tr>
+            <tr><td>V3</td><td>17</td><td>60</td></tr>
+            <tr><td>V1</td><td>18</td><td>70</td></tr>
+          </table>
+        `,
+        options: [
+          { id: 'A', text: "15" },
+          { id: 'B', text: "16" },
+          { id: 'C', text: "17" },
+          { id: 'D', text: "18" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 5,
+        source: "HKDSE 2018 1A Q2",
+        question: "執行下列 SQL 指令會輸出什麼？\nSELECT MAX(WEIGHT) FROM PROD WHERE PSTAT <> 'S'",
+        table: `
+          <table class="text-[10px] mb-2 bg-white">
+            <tr class="bg-slate-100 font-bold"><td>PNAME</td><td>WEIGHT</td><td>PSTAT</td></tr>
+            <tr><td>SALT</td><td>1</td><td>A</td></tr>
+            <tr><td>SUGAR</td><td>1</td><td>P</td></tr>
+            <tr><td>SHAMPOO</td><td>1</td><td>P</td></tr>
+            <tr><td>TOOTHPASTE</td><td>3</td><td>P</td></tr>
+            <tr><td>ORANGE</td><td>4</td><td>S</td></tr>
+            <tr><td>CHARCOAL</td><td>5</td><td>P</td></tr>
+            <tr><td>NOODLES</td><td>6</td><td>S</td></tr>
+          </table>
+        `,
+        options: [
+          { id: 'A', text: "1" },
+          { id: 'B', text: "5" },
+          { id: 'C', text: "6" },
+          { id: 'D', text: "11" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 6,
+        source: "HKDSE 2023 1A Q5",
+        question: "應在 SQL 指令中 SELECT 採用以下哪個子句，把 salary 大於 5000 的資料按 salary 的升序排列展示？",
+        options: [
+          { id: 'A', text: "WHERE salary > 5000 ORDER BY salary" },
+          { id: 'B', text: "HAVING salary > 5000 ORDER BY salary" },
+          { id: 'C', text: "WHERE salary > 5000 AND ORDER BY salary" },
+          { id: 'D', text: "HAVING salary > 5000 OR ORDER BY salary" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 7,
+        source: "HKDSE 2013 1A Q2",
+        question: "以下 SQL 指令執行了哪些工作？\nSELECT * FROM EXAM WHERE CLASS='1A' ORDER BY SCORE DESC",
+        options: [
+          { id: 'A', text: "排序 和 篩選" },
+          { id: 'B', text: "排序 和 更新" },
+          { id: 'C', text: "計算數目 和 篩選" },
+          { id: 'D', text: "計算數目 和 更新" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 8,
+        source: "HKDSE 2021 1A Q11",
+        question: "在數據庫軟件內使用表格輸入數據的主要優點是什麼？\n(1) 減少輸入錯誤\n(2) 縮短 SQL 語句的執行時間\n(3) 需要較少儲存空間",
+        options: [
+          { id: 'A', text: "只有 (1)" },
+          { id: 'B', text: "只有 (2)" },
+          { id: 'C', text: "只有 (1) 和 (3)" },
+          { id: 'D', text: "只有 (2) 和 (3)" }
+        ],
+        correct: 'A'
+      }
+    ];
+
+
+    const app = document.getElementById('app');
+
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/35.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png",
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+    ];
+
+    let state = {
+      view: 'menu',
+      currentQuestion: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null
+    };
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="MENU">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">SQL POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">數據庫指令 / Q&amp;A</h2>
+
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-[280px] py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始挑戰題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="space-y-4">
+              <!-- 基本操作 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-md font-bold text-blue-600 mb-2">基本操作</div>
+                <div class="text-slate-700 text-xs space-y-1">
+                  <div><b>SELECT</b>: 從資料表中 選取 欄位或資料</div>
+                  <div><b>FROM</b>: 指定要從哪個資料表中取出資料</div>
+                  <div><b>*</b>: 代表「全部欄位」</div>
+                  <div><b>AS</b>: 重新命名欄位或表格（設定別名）</div>
+                  <div><b>DISTINCT</b>: 篩掉重複的資料，只顯示唯一值</div>
+                  <div><b>NULL</b>: 表示「空值」的資料</div>
+                </div>
+              </div>
+
+              <!-- 篩選與排序 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-md font-bold text-blue-600 mb-2">篩選與排序</div>
+                <div class="text-slate-700 text-xs space-y-1">
+                  <div><b>WHERE</b>: 指定查詢條件，篩選 要顯示的資料</div>
+                  <div><b>LIKE</b>: 模糊查詢，用萬用字元（如 %）比對文字</div>
+                  <div><b>BETWEEN</b>: 判斷資料是否在某一範圍之內</div>
+                  <div><b>ORDER BY</b>: 排列輸出結果</div>
+                  <div><b>ASC</b>: 升序 (由小到大)</div>
+                  <div><b>DESC</b>: 降序 (由大到小)</div>
+                </div>
+              </div>
+
+              <!-- 分組與聚合 -->
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-md font-bold text-blue-600 mb-2">分組與聚合</div>
+                <div class="text-slate-700 text-xs space-y-1">
+                  <div><b>GROUP BY</b>: 把資料 分組</div>
+                  <div><b>HAVING</b>: 分組後的條件篩選</div>
+                  <div><b>SUM()</b>: 計算 欄位數值的 總和</div>
+                  <div><b>AVG()</b>: 計算欄位的 平均值</div>
+                  <div><b>MAX()</b>: 取 欄位中的 最大值</div>
+                  <div><b>MIN()</b>: 取 欄位中的 最小值</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-[8px]">SQL Challenge</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-2 mb-2 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm flex flex-col justify-center">
+              <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase tracking-wider">${q.source}</p>
+              ${q.table ? q.table : ''}
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm h-14 flex items-center
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1">${opt.id}.</span>
+                  <span class="leading-tight">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-end">
+            ${state.answered ? `
+              <button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">
+                下一題 →
+              </button>
+            ` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+      let msg = percentage >= 80 ? "太強了！你係 SQL 數據庫大師！" : percentage >= 60 ? "做得好！再接再厲！" : "再接再厲！";
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT : percentage >= 60 ? POKEMON_IMAGES.GOOD : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+          <div class="flex gap-3">
+            <button onclick="location.reload()" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">返回圖鑑</button>
+            <button onclick="startQuiz()" class="px-4 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">再試一次</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
