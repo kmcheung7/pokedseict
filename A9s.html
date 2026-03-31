@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>寶可夢數據特訓</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+  </style>
+</head>
+<body class="bg-emerald-50">
+  <div id="app"></div>
+
+  <script>
+    const FARFETCHD_IMG = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/83.png";
+
+    const POKEMON_DATA = [
+      { id: 'P001', name: '皮卡丘', type: '電', evo: 1, hp: 35, atk: 55 },
+      { id: 'P002', name: '妙蛙種子', type: '草', evo: 1, hp: 45, atk: 49 },
+      { id: 'P003', name: '小火龍', type: '火', evo: 1, hp: 39, atk: 52 },
+      { id: 'P004', name: '傑尼龜', type: '水', evo: 1, hp: 44, atk: 48 },
+      { id: 'P005', name: '伊布', type: '一般', evo: 1, hp: 55, atk: 55 },
+    ];
+
+    const QUESTIONS = [
+      { desc: "大蔥鴨需要統計隊伍的總生命值 (HP) 來準備補給", parts: ["=", {type: "func", ans: "SUM"}, "(", {type: "range", ans: "E2:E6"}, ")"], options: {func: ["SUM", "AVERAGE", "MIN", "MAX"], range: ["E2:E6", "F2:F6", "B2:B6", "C2:C6"]} },
+      { desc: "計算隊伍寶可夢的攻擊力平均值，評估戰鬥潛力", parts: ["=", {type: "func", ans: "AVERAGE"}, "(", {type: "range", ans: "F2:F6"}, ")"], options: {func: ["AVERAGE", "SUM", "COUNT", "MAX"], range: ["F2:F6", "E2:E6", "B2:B6", "C2:C6"]} },
+      { desc: "找出隊伍中 HP 最高的寶可夢數值，作為肉盾擔當", parts: ["=", {type: "func", ans: "MAX"}, "(", {type: "range", ans: "E2:E6"}, ")"], options: {func: ["MAX", "MIN", "SUM", "AVERAGE"], range: ["E2:E6", "F2:F6", "C2:C6", "D2:D6"]} },
+      { desc: "找出攻擊力最低的數值，需要特別訓練", parts: ["=", {type: "func", ans: "MIN"}, "(", {type: "range", ans: "F2:F6"}, ")"], options: {func: ["MIN", "MAX", "SUM", "AVERAGE"], range: ["F2:F6", "E2:E6", "C2:C6", "B2:B6"]} },
+      { desc: "計算屬性為『電』的寶可夢數量，準備應對水系敵人", parts: ["=", {type: "func", ans: "COUNTIF"}, "(", {type: "range", ans: "C2:C6"}, ",", {type: "crit", ans: "\"電\""}, ")"], options: {func: ["COUNTIF", "SUMIF", "COUNT", "SUM"], range: ["C2:C6", "E2:E6", "F2:F6", "B2:B6"], crit: ["\"電\"", "\"火\"", "\"水\"", "\"草\""]} },
+      { desc: "檢查 HP 是否高於 40，判斷是否需要休息 (顯示「高」或「低」)", parts: ["=", {type: "func", ans: "IF"}, "(", {type: "logic", ans: "E2>40"}, ",", {type: "val", ans: "\"高\""}, ",", {type: "val", ans: "\"低\""}, ")"], options: {func: ["IF", "SUMIF", "COUNTIF", "IFS"], logic: ["E2>40", "E2<40", "F2>40", "E2=40"], val: ["\"高\"", "\"低\"", "\"強\"", "\"弱\""]} },
+      { desc: "計算屬性為『火』的寶可夢攻擊力總和，準備發動連攜技", parts: ["=", {type: "func", ans: "SUMIF"}, "(", {type: "range", ans: "C2:C6"}, ",", {type: "crit", ans: "\"火\""}, ",", {type: "range", ans: "F2:F6"}, ")"], options: {func: ["SUMIF", "COUNTIF", "SUM", "AVERAGE"], range: ["C2:C6", "F2:F6", "E2:E6", "B2:B6"], crit: ["\"火\"", "\"電\"", "\"水\"", "\"草\""]} },
+      { desc: "統計攻擊力大於 50 的寶可夢數量，選出突擊隊員", parts: ["=", {type: "func", ans: "COUNTIF"}, "(", {type: "range", ans: "F2:F6"}, ",", {type: "crit", ans: "\">50\""}, ")"], options: {func: ["COUNTIF", "SUMIF", "COUNT", "SUM"], range: ["F2:F6", "E2:E6", "C2:C6", "B2:B6"], crit: ["\">50\"", "<50", "=50", ">50"]} },
+      { desc: "使用 XLOOKUP 根據名稱查詢皮卡丘的 HP", parts: ["=", {type: "func", ans: "XLOOKUP"}, "(", {type: "val", ans: "\"皮卡丘\""}, ",", {type: "range", ans: "B2:B6"}, ",", {type: "range", ans: "E2:E6"}, ")"], options: {func: ["XLOOKUP", "VLOOKUP", "LOOKUP", "INDEX"], range: ["B2:B6", "E2:E6", "F2:F6", "C2:C6"], val: ["\"皮卡丘\"", "\"小火龍\"", "\"伊布\"", "\"妙蛙種子\""]} },
+      { desc: "判斷攻擊力是否大於等於 50 (顯示「強」或「弱」)", parts: ["=", {type: "func", ans: "IF"}, "(", {type: "logic", ans: "F3>=50"}, ",", {type: "val", ans: "\"強\""}, ",", {type: "val", ans: "\"弱\""}, ")"], options: {func: ["IF", "SUMIF", "COUNTIF", "IFS"], logic: ["F3>=50", "F3<=50", "F3>50", "F3<50"], val: ["\"強\"", "\"弱\"", "\"高\"", "\"低\""]} },
+    ];
+
+    const state = {
+      gameState: 'intro',
+      currentQ: 0,
+      answers: {},
+      activeSlot: null,
+      status: 'idle', // idle, correct, wrong, revealed
+      score: 0,
+    };
+
+    const elApp = document.getElementById('app');
+
+    const question = () => QUESTIONS[state.currentQ];
+
+    const rankOf = (score, total) => {
+      const ratio = score / total;
+      if (ratio === 1) return { title: "寶可夢數據大師", colorClass: "text-yellow-400" };
+      if (ratio >= 0.7) return { title: "精英數據分析師", colorClass: "text-blue-400" };
+      if (ratio >= 0.4) return { title: "實習訓練師", colorClass: "text-emerald-400" };
+      return { title: "新手訓練師", colorClass: "text-slate-400" };
+    };
+
+    function Icon(name, className="") {
+      const cls = `w-5 h-5 ${className}`.trim();
+      if (name === "book") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 4h7a4 4 0 0 1 4 4v14H6a4 4 0 0 0-4 4V4z"></path>
+          <path d="M22 4h-7a4 4 0 0 0-4 4v14h7a4 4 0 0 1 4 4V4z"></path>
+        </svg>`;
+      }
+      if (name === "calc") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+          <line x1="8" y1="6" x2="8" y2="6"></line>
+          <line x1="12" y1="6" x2="12" y2="6"></line>
+          <line x1="16" y1="6" x2="16" y2="6"></line>
+          <line x1="8" y1="10" x2="16" y2="10"></line>
+          <line x1="8" y1="14" x2="16" y2="14"></line>
+          <line x1="8" y1="18" x2="12" y2="18"></line>
+        </svg>`;
+      }
+      if (name === "sparkles") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l1.2 4.2L17 7.4l-3.8 1.2L12 13l-1.2-4.4L7 7.4l3.8-1.2L12 2z"></path>
+          <path d="M20 14l.8 2.7L23 18l-2.2.7L20 21l-.8-2.3L17 18l2.2-.3L20 14z"></path>
+          <path d="M3 14l1 3.2L7 18l-3 .8L3 22l-1-3.2L-1 18l3-.8L3 14z"></path>
+        </svg>`;
+      }
+      if (name === "check") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12l2.5 2.5L16 9.5"></path>
+        </svg>`;
+      }
+      if (name === "x") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M15 9l-6 6"></path>
+          <path d="M9 9l6 6"></path>
+        </svg>`;
+      }
+      if (name === "info") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4"></path>
+          <path d="M12 8h.01"></path>
+        </svg>`;
+      }
+      if (name === "skip") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+          <line x1="2" y1="4" x2="2" y2="20"></line>
+        </svg>`;
+      }
+      if (name === "arrowleft") {
+        return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>`;
+      }
+      return "";
+    }
+
+    function checkAnswer() {
+      const q = question();
+      let isCorrect = true;
+
+      for (let idx = 0; idx < q.parts.length; idx++) {
+        const part = q.parts[idx];
+        if (typeof part === "string") continue;
+        if (state.answers[idx] !== part.ans) { isCorrect = false; break; }
+      }
+
+      if (isCorrect) {
+        state.status = "correct";
+        state.score += 1;
+      } else {
+        // wrong -> allow re-select; do NOT reveal
+        state.status = "wrong";
+      }
+
+      state.activeSlot = null;
+      render();
+    }
+
+    function revealAnswer() {
+      const q = question();
+      const newAnswers = {};
+      q.parts.forEach((part, idx) => {
+        if (typeof part !== "string") newAnswers[idx] = part.ans;
+      });
+      state.answers = newAnswers;
+      state.status = "revealed";
+      state.activeSlot = null;
+      render();
+    }
+
+    function nextStep() {
+      // KEY FIX: only advance after correct/revealed
+      if (!(state.status === "correct" || state.status === "revealed")) return;
+
+      state.answers = {};
+      state.activeSlot = null;
+      state.status = "idle";
+
+      if (state.currentQ < QUESTIONS.length - 1) {
+        state.currentQ += 1;
+        render();
+      } else {
+        state.gameState = "result";
+        render();
+      }
+    }
+
+    function render() {
+      const q = question();
+      const status = state.status;
+      const rank = rankOf(state.score, QUESTIONS.length);
+
+      if (state.gameState === "intro") {
+        elApp.innerHTML = `
+          <div class="min-h-screen bg-emerald-900 text-white flex items-center justify-center p-4">
+            <div class="max-w-2xl w-full bg-emerald-800 p-8 rounded-3xl border-4 border-emerald-600 shadow-2xl flex flex-col md:flex-row items-center justify-center gap-8">
+              <img src="${FARFETCHD_IMG}" alt="大蔥鴨" class="w-48 h-48 object-contain drop-shadow-2xl flex-shrink-0" />
+              <div class="text-center md:text-left flex flex-col items-center md:items-start">
+                <h1 class="text-4xl font-bold mb-4 text-yellow-400">大蔥鴨的數據特訓</h1>
+                <p class="text-emerald-100 mb-6 leading-relaxed text-lg max-w-md">
+                  「嘎！我是導師大蔥鴨。研究所的數據庫被火箭隊入侵了，現在一片混亂！作為訓練師，你必須學會使用這些公式來重新整理我們的寶可夢資料，否則我們無法出發冒險！」
+                </p>
+                <button id="startBtn" class="bg-yellow-500 hover:bg-yellow-600 text-emerald-900 font-bold py-3 px-8 rounded-full flex items-center gap-2 transition-transform hover:scale-105">
+                  ${Icon("book", "text-emerald-900 w-5 h-5")} 接受特訓
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.getElementById("startBtn").addEventListener("click", () => {
+          state.gameState = "quiz";
+          state.currentQ = 0;
+          state.answers = {};
+          state.activeSlot = null;
+          state.status = "idle";
+          state.score = 0;
+          render();
+        });
+        return;
+      }
+
+      if (state.gameState === "result") {
+        elApp.innerHTML = `
+          <div class="min-h-screen bg-emerald-900 text-white flex items-center justify-center p-6">
+            <div class="max-w-md w-full text-center bg-emerald-800 p-8 rounded-3xl border-4 border-yellow-500 shadow-2xl">
+              <img src="${FARFETCHD_IMG}" alt="大蔥鴨" class="w-32 h-32 mx-auto mb-6" />
+              <h2 class="text-3xl font-bold mb-2">任務圓滿成功！</h2>
+              <p class="text-emerald-200 mb-6">「嘎！幹得好！數據已經恢復正常，我們終於可以出發去冒險了！」</p>
+              <div class="text-lg mb-2">您的評級是：</div>
+              <div class="text-4xl font-black ${rank.colorClass} mb-8">${rank.title}</div>
+              <div class="text-6xl font-black text-white mb-8">
+                ${state.score} <span class="text-2xl text-emerald-400">/ ${QUESTIONS.length}</span>
+              </div>
+
+              <div class="flex flex-col gap-3">
+                <button id="restartBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-8 rounded-full transition-all">
+                  再次挑戰
+                </button>
+                <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-8 rounded-full transition-all flex items-center justify-center gap-2">
+                  ${Icon("arrowleft","w-5 h-5")} 返回圖鑑
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+        document.getElementById("restartBtn").addEventListener("click", () => location.reload());
+        return;
+      }
+
+      const locked = (status === "revealed"); // ONLY reveal locks
+      const slotsHtml = q.parts.map((part, idx) => {
+        if (typeof part === "string") return `<span class="text-slate-400">${part}</span>`;
+        const isActive = state.activeSlot === idx;
+        const val = state.answers[idx] ?? "";
+        const hasVal = val !== "";
+        const textClass = hasVal ? "text-emerald-300" : "text-slate-500";
+        return `
+          <button
+            type="button"
+            data-slot="${idx}"
+            ${locked ? "disabled" : ""}
+            class="px-3 py-1 rounded border-2 border-dashed transition-all
+                   ${isActive ? "border-yellow-400 bg-slate-700" : "border-slate-600 hover:border-slate-400"}
+                   ${textClass}"
+          >
+            ${hasVal ? val : "?"}
+          </button>
+        `;
+      }).join("");
+
+      let paramHtml = `
+        <div class="text-center text-slate-400 py-8 border-2 border-dashed rounded-xl">
+          ${status === "revealed" ? "答案已揭曉" : "點選公式中的 [ ? ] 進行填空"}
+        </div>
+      `;
+
+      if (state.activeSlot !== null) {
+        const slotPart = q.parts[state.activeSlot];
+        const type = slotPart.type;
+        const opts = q.options[type] || [];
+        paramHtml = `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-sm text-slate-500 mb-2">
+              ${Icon("info","w-4 h-4")} 請選擇正確的參數：
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              ${opts.map(opt => `
+                <button
+                  type="button"
+                  data-option="${String(opt).replace(/"/g, "&quot;")}"
+                  ${locked ? "disabled" : ""}
+                  class="bg-white border-2 border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 py-3 rounded-lg font-mono font-bold transition-all"
+                >
+                  ${opt}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      const statusBanner =
+        status === "correct"
+          ? `<span class="text-emerald-600 font-bold flex items-center gap-2">${Icon("check","w-5 h-5")} 正確！</span>`
+          : status === "wrong"
+          ? `<span class="text-red-600 font-bold flex items-center gap-2">${Icon("x","w-5 h-5")} 錯誤，再試試看。</span>`
+          : status === "revealed"
+          ? `<span class="text-blue-600 font-bold flex items-center gap-2">${Icon("info","w-5 h-5")} 參考答案已顯示。</span>`
+          : "";
+
+      // Only ONE main button area: show Check / reveal / next
+      const checkButton =
+        (status === "idle" || status === "wrong")
+          ? `<button id="checkBtn" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-emerald-700">檢查答案</button>`
+          : "";
+
+      const mainButton =
+        (status === "idle" || status === "wrong")
+          ? `<button id="nextBtn" class="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 flex items-center gap-2">
+               看答案 ${Icon("info","w-5 h-5")}
+             </button>`
+          : `<button id="nextBtn" class="bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-bold hover:bg-slate-300 flex items-center gap-2">
+               ${state.currentQ === QUESTIONS.length - 1 ? "完成" : "下一題"} ${Icon("skip","w-5 h-5")}
+             </button>`;
+
+      elApp.innerHTML = `
+        <div class="min-h-screen bg-slate-50 p-4 md:p-8">
+          <div class="max-w-4xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+              <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                ${Icon("calc","text-emerald-600")} 寶可夢數據特訓
+              </h1>
+              <div class="text-sm font-bold text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
+                任務進度: ${state.currentQ + 1} / ${QUESTIONS.length}
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 overflow-x-auto">
+              <table class="w-full text-sm border-collapse text-center">
+                <thead>
+                  <tr class="bg-slate-800 text-white">
+                    <th class="p-2 border border-slate-700 w-10"></th>
+                    <th class="p-2 border border-slate-700">A</th>
+                    <th class="p-2 border border-slate-700">B</th>
+                    <th class="p-2 border border-slate-700">C</th>
+                    <th class="p-2 border border-slate-700">D</th>
+                    <th class="p-2 border border-slate-700">E</th>
+                    <th class="p-2 border border-slate-700">F</th>
+                  </tr>
+                  <tr class="bg-slate-100 text-slate-700 font-bold">
+                    <td class="p-2 border">1</td>
+                    <td class="p-2 border">ID</td>
+                    <td class="p-2 border">名稱</td>
+                    <td class="p-2 border">屬性</td>
+                    <td class="p-2 border">進化</td>
+                    <td class="p-2 border">HP</td>
+                    <td class="p-2 border">攻擊</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${POKEMON_DATA.map((p,i) => `
+                    <tr class="hover:bg-emerald-50">
+                      <td class="p-2 border bg-slate-50 font-bold text-slate-400">${i+2}</td>
+                      <td class="p-2 border">${p.id}</td>
+                      <td class="p-2 border">${p.name}</td>
+                      <td class="p-2 border">${p.type}</td>
+                      <td class="p-2 border">${p.evo}</td>
+                      <td class="p-2 border">${p.hp}</td>
+                      <td class="p-2 border">${p.atk}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-emerald-500">
+              <div class="mb-6 flex items-start gap-4">
+                <img src="${FARFETCHD_IMG}" alt="大蔥鴨" class="w-16 h-16 object-contain hidden md:block" />
+                <div>
+                  <p class="text-sm text-emerald-600 font-bold uppercase tracking-wider">導師大蔥鴨的指令：</p>
+                  <h2 class="text-xl font-bold text-slate-800 mt-1 flex items-center gap-2">
+                    ${Icon("sparkles","text-yellow-500")} ${q.desc}
+                  </h2>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 text-white p-6 rounded-xl font-mono text-lg mb-8 flex flex-wrap items-center justify-center gap-2 shadow-inner">
+                ${slotsHtml}
+              </div>
+
+              <div class="min-h-[120px]">
+                ${paramHtml}
+              </div>
+
+              <div class="mt-8 flex justify-between items-center border-t pt-6">
+                <div class="flex gap-4">${statusBanner}</div>
+
+                <div class="flex gap-3">
+                  ${checkButton}
+                  ${mainButton}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // ---- IMPORTANT: bind events AFTER render (no stale references) ----
+      elApp.querySelectorAll('button[data-slot]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (locked) return;
+          const idx = Number(btn.getAttribute('data-slot'));
+          state.activeSlot = idx;
+          render();
+        });
+      });
+
+      elApp.querySelectorAll('button[data-option]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (locked) return;
+          if (state.activeSlot === null) return;
+          const opt = btn.getAttribute('data-option');
+          state.answers[state.activeSlot] = opt;
+          state.activeSlot = null;
+          render();
+        });
+      });
+
+      const checkBtn = document.getElementById('checkBtn');
+      if (checkBtn) checkBtn.addEventListener('click', checkAnswer);
+
+      const mainBtn = document.getElementById('nextBtn');
+      if (mainBtn) {
+        mainBtn.addEventListener('click', () => {
+          // When idle/wrong => reveal (看答案)
+          if (state.status === 'idle' || state.status === 'wrong') {
+            revealAnswer();
+          } else {
+            nextStep();
+          }
+        });
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

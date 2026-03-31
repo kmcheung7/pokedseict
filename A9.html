@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>試算表（MC）- 資訊處理訓練營</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .font-pixel { font-family: 'Press Start 2P', cursive; }
+    .option-btn { transition: all 0.2s ease; }
+    .correct { background-color: #4ade80 !important; border-color: #166534 !important; color: white !important; }
+    .wrong { background-color: #f87171 !important; border-color: #991b1b !important; color: white !important; }
+    .disabled { pointer-events: none; }
+    .poke-shadow { box-shadow: 0 4px 0 #b45309; }
+  </style>
+</head>
+
+<body class="bg-yellow-100 min-h-screen flex items-center justify-center p-2">
+  <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border-8 border-yellow-400 max-h-screen"></div>
+
+  <script>
+    const quizData = [
+      {
+        id: 1,
+        source: "2023 1A Q8",
+        question: "8. 在試算表輸入公式時，以下哪個結果是錯誤的？",
+        options: [
+          { id: 'A', text: 'LEN("HKDSE") -> 5' },
+          { id: 'B', text: 'UPPER("technology") -> Technology' },
+          { id: 'C', text: 'FIND("for","information") -> 3' },
+          { id: 'D', text: 'TRIM(" ICT ") -> ICT' }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 2,
+        source: "2024 1A Q4",
+        question: "4. 試算表記錄了學校的設備。以下哪項可幫助顯示同一類型裝置的總數？",
+        options: [
+          { id: 'A', text: "多工作紙" },
+          { id: 'B', text: "排序" },
+          { id: 'C', text: "樞紐分析表" },
+          { id: 'D', text: "「假設」分析" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 3,
+        source: "2019 1A Q7",
+        question: "7. 將 STUDENT 匯出至試算表。哪項試算表功能可產生與在 DBMS 工具下執行下列 SQL 指令後的輸出相似？\nSELECT CLASS, COUNT(*) FROM STUDENT GROUP BY CLASS",
+        options: [
+          { id: 'A', text: "排序" },
+          { id: 'B', text: "在公式內使用儲存格參照" },
+          { id: 'C', text: "物件連接與嵌入" },
+          { id: 'D', text: "樞紐分析表" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 4,
+        source: "2020 1A Q10",
+        question: "10. 應為下列哪項（些）任務建立試算表「假設」情境？\n(1) 尋找在數學考試獲 90 分或以上的學生。\n(2) 估算由不同製造商生產的產品成本。\n(3) 建立月平均溫度的圖表。",
+        options: [
+          { id: 'A', text: "只有 (1)" },
+          { id: 'B', text: "只有 (2)" },
+          { id: 'C', text: "只有 (1) 和 (3)" },
+          { id: 'D', text: "只有 (2) 和 (3)" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 5,
+        source: "2019 1A Q3",
+        question: "3. 工廠經理正檢視生產鉛筆的時間和成本限制，以決定需要購入多少台機器。他應使用哪項試算表功能？",
+        options: [
+          { id: 'A', text: "樞紐分析表" },
+          { id: 'B', text: "多個工作表" },
+          { id: 'C', text: "「假設」分析" },
+          { id: 'D', text: "使用多個條件將數據排序" }
+        ],
+        correct: 'C'
+      },
+      {
+        id: 6,
+        source: "樣本試卷 [參考 2017 DSE ICT1A Q.11]",
+        question: "8. 對於一間連鎖式便利店，在下列哪項／些例子中應該使用試算表上的「假設」情境？\n(1) 改變不同參數來估算每月支出\n(2) 製作每月銷售分析\n(3) 比較不同分店的銷售數據",
+        options: [
+          { id: 'A', text: "只有 (1)" },
+          { id: 'B', text: "只有 (2)" },
+          { id: 'C', text: "只有 (1) 和 (3)" },
+          { id: 'D', text: "只有 (2) 和 (3)" }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 7,
+        source: "2023 1A Q12",
+        question: "12. 以下哪些可能涉及物件連接與嵌入 (OLE)？\n(1) 以郵件合併建立文件\n(2) 建立一個樞紐分析表\n(3) 在一張演示投影片插入圖像",
+        options: [
+          { id: 'A', text: "只有 (1) 和 (2)" },
+          { id: 'B', text: "只有 (1) 和 (3)" },
+          { id: 'C', text: "只有 (2) 和 (3)" },
+          { id: 'D', text: "(1)、(2) 和 (3)" }
+        ],
+        correct: 'B'
+      },
+      {
+        id: 8,
+        source: "2021 1A Q10",
+        question: "10. 志明打算利用物件連結，把 X.jpg 和 Y.xlsx 的內容加入至 Z.docx 內。下列哪句關於物件連接與嵌入 (OLE) 的句子是正確的？",
+        options: [
+          { id: 'A', text: "OLE 不能應用於 X 的檔案格式。" },
+          { id: 'B', text: "在志明行動前，X 的檔案大小是小於 Z 的。" },
+          { id: 'C', text: "志明完成其行動後，Z 的檔案大小將會大於 Y 的。" },
+          { id: 'D', text: "改變 Y 內的數據可影響隨後 Z 的列印本。" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 9,
+        source: "2012 1A Q8",
+        question: "8. 陳先生打算在試算表內取得在測驗中獲得 80 分或上之學生名單，如下所示。他應使用哪些功能？",
+        options: [
+          { id: 'A', text: "樞紐分析表和排序" },
+          { id: 'B', text: "排序和搜尋" },
+          { id: 'C', text: "篩選和搜尋" },
+          { id: 'D', text: "篩選和排序" }
+        ],
+        correct: 'D'
+      },
+      {
+        id: 10,
+        source: "概念題目",
+        question: "在試算表公式中，「$」符號的主要功能是什麼？",
+        options: [
+            { id: 'A', text: "自動計算總和" },
+            { id: 'B', text: "鎖定儲存格參照（絕對參照）" },
+            { id: 'C', text: "將數值轉換為貨幣格式" },
+            { id: 'D', text: "隱藏特定的欄或列" }
+        ],
+        correct: 'B'
+        }
+
+    ];
+
+    const app = document.getElementById('app');
+
+    const POKEMON_IMAGES = {
+      MENU: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/152.png",
+      BAD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      GOOD: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      GREAT: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/6.png"
+    };
+
+    const pokeImages = [
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/150.png",
+      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png"
+    ];
+
+    let state = {
+      view: 'menu',
+      currentQuestion: 0,
+      score: 0,
+      answered: false,
+      selectedAnswer: null
+    };
+
+    function render() {
+      if (state.view === 'menu') renderMenu();
+      else if (state.view === 'quiz') renderQuiz();
+      else if (state.view === 'result') renderResult();
+    }
+
+    function renderMenu() {
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-blue-600 overflow-y-auto">
+          <div class="flex flex-col items-center justify-center p-6 text-center">
+            <img src="${POKEMON_IMAGES.MENU}" class="w-24 h-24 drop-shadow-2xl" alt="MENU">
+            <h1 class="text-xl font-pixel text-white mt-3 drop-shadow-md">POKÉDEX</h1>
+            <h2 class="text-yellow-300 font-bold text-md mt-1 tracking-widest">試算表（MC）/ Q&amp;A</h2>
+
+            <button onclick="startQuiz()" class="mt-4 w-full max-w-xs py-3 bg-yellow-400 text-blue-900 font-bold text-md rounded-2xl poke-shadow hover:scale-105 transition-all active:scale-95">
+              開始挑戰題目！
+            </button>
+          </div>
+
+          <div class="flex-grow bg-blue-50 rounded-t-3xl p-4 shadow-inner">
+            <h3 class="text-xs font-bold text-slate-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-400 rounded-full"></span> 溫習圖鑑
+            </h3>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">1. 常見數學與邏輯函數</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• <b>INT(number)</b>：取整數部分，例如 <b>INT(4.9) → 4</b></div>
+                  <div>• <b>RAND()</b>：產生 0 至 1 之間的隨機數</div>
+                  <div>• <b>SQRT(number)</b>：平方根，例如 <b>SQRT(81) → 9</b></div>
+                  <div>• <b>ROUND(number, num_digits)</b>：四捨五入</div>
+                  <div>• <b>AND(...)</b>：所有條件都真，結果先為 TRUE</div>
+                  <div>• <b>OR(...)</b>：只要其中一個條件為真，結果就為 TRUE</div>
+                  <div>• <b>NOT(...)</b>：把 TRUE / FALSE 反轉</div>
+                  <div>• 呢類函數常配合 <b>IF</b> 一齊考</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">2. 文字函數</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• <b>LEFT(text, n)</b>：由左邊擷取 n 個字元</div>
+                  <div>• <b>RIGHT(text, n)</b>：由右邊擷取 n 個字元</div>
+                  <div>• <b>MID(text, start, n)</b>：由指定位置開始擷取 n 個字元</div>
+                  <div>• <b>LEN(text)</b>：計算字元數目</div>
+                  <div>• <b>FIND(find_text, within_text)</b>：找出文字開始位置</div>
+                  <div>• 常見延伸題亦會見到 <b>UPPER</b>、<b>TRIM</b></div>
+                  <div>• 例如：<b>LEN("HKDSE") → 5</b>、<b>FIND("for","information") → 3</b></div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">3. 統計、條件與查找函數</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• <b>AVERAGE(range)</b>：平均數</div>
+                  <div>• <b>COUNT(range)</b>：計算有多少個數值</div>
+                  <div>• <b>COUNTIF(range, criteria)</b>：計算符合條件的儲存格數量</div>
+                  <div>• <b>MAX(range)</b> / <b>MIN(range)</b>：最大值 / 最小值</div>
+                  <div>• <b>RANK(number, range)</b>：找出排名</div>
+                  <div>• <b>SUM(range)</b>：總和</div>
+                  <div>• <b>SUMIF(range, criteria, sum_range)</b>：按條件加總</div>
+                  <div>• <b>IF(condition, value_if_true, value_if_false)</b>：條件判斷</div>
+                  <div>• <b>XLOOKUP(lookup_value, lookup_array, return_array)</b>：按值查找對應資料</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">4. 複製公式與 $ 鎖定儲存格</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• 複製公式時，普通參照會跟住位置改變，叫做<b>相對參照</b></div>
+                  <div>• <b>加上 <b>$</b> 可固定欄或列</b></div>
+                  <div>• <b>$B$1</b>：欄同列都固定</div>
+                  <div>• <b>B$1</b>：固定第 1 列</div>
+                  <div>• <b>$B1</b>：固定 B 欄</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">5. 樞紐分析表</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• 用來整理大量資料，例如分類、計數、<b>總和</b></div>
+                  <div>• 常見欄位區：篩選、欄、列、值</div>
+                  <div>• 適合做出類似 SQL 的 <b>GROUP BY</b> 結果</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">6. 「假設」分析與目標搜尋</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• 「假設」分析：改不同輸入值，睇結果點變</div>
+                  <div>• 適合用於<b>估算成本</b>、支出、產量、機器數目</div>
+                  <div>• <b>目標搜尋</b>：已知想要的結果，反推輸入值</div>
+                  <div>• 例如：想班會費變成 $1000，就反推某個預算應改幾多</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">7. 圖表</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• <b>圓形圖</b>：展示各部分佔整體比例</div>
+                  <div>• <b>折線圖</b>：展示時間變化趨勢</div>
+                  <div>• <b>散佈圖</b>：分析兩組數值之間的關係</div>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+                <div class="text-lg font-bold text-blue-600 mb-3">8. OLE、篩選、排序與格式化</div>
+                <div class="text-slate-700 text-sm leading-relaxed space-y-2">
+                  <div>• <b>OLE</b>：把其他檔案內容連接或嵌入文件</div>
+                  <div>• 若用<b>連結</b>方式，原檔更新可影響文件內容</div>
+                  <div>• <b>篩選</b>：顯示符合條件的資料</div>
+                  <div>• <b>排序</b>：把資料按次序排列</div>
+                  <div>• <b>自動換行</b>：文字過長時自動分行顯示</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz() {
+      const q = quizData[state.currentQuestion];
+      const pokeImg = pokeImages[state.currentQuestion % pokeImages.length];
+
+      app.innerHTML = `
+        <div class="flex flex-col flex-grow bg-slate-50 overflow-y-auto">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center shadow-sm">
+            <span class="font-pixel text-xs">Wild Question</span>
+            <span class="font-bold bg-blue-700 px-2 py-0.5 rounded-full text-xs">Lv. ${state.currentQuestion + 1}</span>
+          </div>
+
+          <div class="p-4 flex-grow flex flex-col items-center">
+            <img src="${pokeImg}" class="w-20 h-20 mt-6 mb-3 animate-bounce" alt="Pokemon">
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 w-full mb-4 shadow-sm min-h-40 flex flex-col justify-center">
+              <p class="text-xs text-blue-500 font-bold mb-2 uppercase tracking-wider">${q.source}</p>
+              <p class="text-sm font-bold text-slate-800 leading-snug whitespace-pre-line">${q.question}</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 w-full">
+              ${q.options.map(opt => `
+                <button
+                  onclick="handleAnswer('${opt.id}')"
+                  class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-sm min-h-14 flex items-start
+                  ${state.answered ? 'disabled' : ''}
+                  ${state.answered && opt.id === q.correct ? 'correct' : ''}
+                  ${state.answered && opt.id === state.selectedAnswer && opt.id !== q.correct ? 'wrong' : ''}
+                ">
+                  <span class="font-bold text-blue-600 mr-1 shrink-0">${opt.id}.</span>
+                  <span class="leading-tight whitespace-pre-line">${opt.text}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-3 border-t bg-white flex justify-between items-center">
+            <div class="text-xs text-slate-500 font-bold">進度：${state.currentQuestion + 1} / ${quizData.length}</div>
+            ${state.answered ? `
+              <button onclick="nextQuestion()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md text-sm">
+                ${state.currentQuestion + 1 < quizData.length ? '下一題 →' : '查看結果 →'}
+              </button>
+            ` : ``}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResult() {
+      const percentage = (state.score / quizData.length) * 100;
+
+      let msg = percentage >= 80 ? "太強了！你係試算表高手！"
+              : percentage >= 60 ? "做得好！再接再厲！"
+              : "再接再厲！";
+
+      let img = percentage >= 80 ? POKEMON_IMAGES.GREAT
+              : percentage >= 60 ? POKEMON_IMAGES.GOOD
+              : POKEMON_IMAGES.BAD;
+
+      app.innerHTML = `
+        <div class="flex flex-col items-center justify-center flex-grow p-6 text-center bg-gradient-to-b from-yellow-50 to-white">
+          <img src="${img}" class="w-32 h-32 mb-4 drop-shadow-xl" alt="Result">
+          <h2 class="text-xl font-bold text-slate-800 mb-1">測驗完成！</h2>
+
+          <div class="text-4xl font-pixel text-blue-600 mb-2">
+            ${state.score} <span class="text-xl text-slate-400">/ ${quizData.length}</span>
+          </div>
+
+          <p class="text-sm text-slate-600 mb-6">${msg}</p>
+
+          <div class="flex gap-3 flex-wrap justify-center">
+            <a href="index.html" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all">
+              返回圖鑑
+            </a>
+            <button onclick="startQuiz()" class="px-4 py-3 bg-yellow-400 text-blue-900 rounded-xl font-bold hover:bg-yellow-500 shadow-lg transition-all">
+              再試一次
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function startQuiz() {
+      state.currentQuestion = 0;
+      state.score = 0;
+      state.answered = false;
+      state.selectedAnswer = null;
+      state.view = 'quiz';
+      render();
+    }
+
+    function handleAnswer(id) {
+      if (state.answered) return;
+      state.answered = true;
+      state.selectedAnswer = id;
+      if (id === quizData[state.currentQuestion].correct) state.score++;
+      render();
+    }
+
+    function nextQuestion() {
+      if (state.currentQuestion + 1 < quizData.length) {
+        state.currentQuestion++;
+        state.answered = false;
+        state.selectedAnswer = null;
+        render();
+      } else {
+        state.view = 'result';
+        render();
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
